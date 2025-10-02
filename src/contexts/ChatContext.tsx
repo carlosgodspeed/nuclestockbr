@@ -20,8 +20,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   useEffect(() => {
-    const storedConversations = localStorage.getItem('conversations');
-    const storedMessages = localStorage.getItem('chatMessages');
+    if (!user) return;
+    
+    const storedConversations = localStorage.getItem(`conversations_${user.id}`);
+    const storedMessages = localStorage.getItem(`chatMessages_${user.id}`);
     
     if (storedConversations) {
       setConversations(JSON.parse(storedConversations));
@@ -29,7 +31,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (storedMessages) {
       setMessages(JSON.parse(storedMessages));
     }
-  }, []);
+  }, [user]);
 
   const getSuppliers = (): User[] => {
     const users = JSON.parse(localStorage.getItem('users') || '[]');
@@ -57,7 +59,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const updated = [...conversations, newConversation];
     setConversations(updated);
-    localStorage.setItem('conversations', JSON.stringify(updated));
+    localStorage.setItem(`conversations_${user.id}`, JSON.stringify(updated));
     
     return newConversation.id;
   };
@@ -77,7 +79,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const updatedMessages = [...messages, newMessage];
     setMessages(updatedMessages);
-    localStorage.setItem('chatMessages', JSON.stringify(updatedMessages));
+    localStorage.setItem(`chatMessages_${user.id}`, JSON.stringify(updatedMessages));
 
     const updatedConversations = conversations.map(conv => {
       if (conv.id === conversationId) {
@@ -91,7 +93,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     setConversations(updatedConversations);
-    localStorage.setItem('conversations', JSON.stringify(updatedConversations));
+    localStorage.setItem(`conversations_${user.id}`, JSON.stringify(updatedConversations));
   };
 
   const getConversationMessages = (conversationId: string): ChatMessage[] => {
@@ -100,6 +102,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const markAsRead = (conversationId: string) => {
+    if (!user) return;
+    
     const updatedMessages = messages.map(m => {
       if (m.conversationId === conversationId && m.senderId !== user?.id) {
         return { ...m, read: true };
@@ -108,7 +112,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     setMessages(updatedMessages);
-    localStorage.setItem('chatMessages', JSON.stringify(updatedMessages));
+    localStorage.setItem(`chatMessages_${user.id}`, JSON.stringify(updatedMessages));
 
     const updatedConversations = conversations.map(conv => {
       if (conv.id === conversationId) {
@@ -118,7 +122,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     setConversations(updatedConversations);
-    localStorage.setItem('conversations', JSON.stringify(updatedConversations));
+    localStorage.setItem(`conversations_${user.id}`, JSON.stringify(updatedConversations));
   };
 
   return (

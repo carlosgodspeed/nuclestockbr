@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Product, Movement, Note } from '@/types';
+import { useAuth } from './AuthContext';
 
 interface StockContextType {
   products: Product[];
@@ -16,21 +17,26 @@ interface StockContextType {
 const StockContext = createContext<StockContextType | undefined>(undefined);
 
 export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [movements, setMovements] = useState<Movement[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
 
   useEffect(() => {
-    const storedProducts = localStorage.getItem('products');
-    const storedMovements = localStorage.getItem('movements');
-    const storedNotes = localStorage.getItem('notes');
+    if (!user) return;
+    
+    const storedProducts = localStorage.getItem(`products_${user.id}`);
+    const storedMovements = localStorage.getItem(`movements_${user.id}`);
+    const storedNotes = localStorage.getItem(`notes_${user.id}`);
     
     if (storedProducts) setProducts(JSON.parse(storedProducts));
     if (storedMovements) setMovements(JSON.parse(storedMovements));
     if (storedNotes) setNotes(JSON.parse(storedNotes));
-  }, []);
+  }, [user]);
 
   const addProduct = (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
+    if (!user) return;
+    
     const newProduct: Product = {
       ...product,
       id: crypto.randomUUID(),
@@ -40,24 +46,30 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     const updated = [...products, newProduct];
     setProducts(updated);
-    localStorage.setItem('products', JSON.stringify(updated));
+    localStorage.setItem(`products_${user.id}`, JSON.stringify(updated));
   };
 
   const updateProduct = (id: string, productData: Partial<Product>) => {
+    if (!user) return;
+    
     const updated = products.map(p => 
       p.id === id ? { ...p, ...productData, updatedAt: new Date().toISOString() } : p
     );
     setProducts(updated);
-    localStorage.setItem('products', JSON.stringify(updated));
+    localStorage.setItem(`products_${user.id}`, JSON.stringify(updated));
   };
 
   const deleteProduct = (id: string) => {
+    if (!user) return;
+    
     const updated = products.filter(p => p.id !== id);
     setProducts(updated);
-    localStorage.setItem('products', JSON.stringify(updated));
+    localStorage.setItem(`products_${user.id}`, JSON.stringify(updated));
   };
 
   const addMovement = (movement: Omit<Movement, 'id'>) => {
+    if (!user) return;
+    
     const newMovement: Movement = {
       ...movement,
       id: crypto.randomUUID(),
@@ -65,7 +77,7 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     const updated = [...movements, newMovement];
     setMovements(updated);
-    localStorage.setItem('movements', JSON.stringify(updated));
+    localStorage.setItem(`movements_${user.id}`, JSON.stringify(updated));
 
     const product = products.find(p => p.id === movement.productId);
     if (product) {
@@ -78,6 +90,8 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const addNote = (note: Omit<Note, 'id' | 'createdAt'>) => {
+    if (!user) return;
+    
     const newNote: Note = {
       ...note,
       id: crypto.randomUUID(),
@@ -86,13 +100,15 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     
     const updated = [...notes, newNote];
     setNotes(updated);
-    localStorage.setItem('notes', JSON.stringify(updated));
+    localStorage.setItem(`notes_${user.id}`, JSON.stringify(updated));
   };
 
   const deleteNote = (id: string) => {
+    if (!user) return;
+    
     const updated = notes.filter(n => n.id !== id);
     setNotes(updated);
-    localStorage.setItem('notes', JSON.stringify(updated));
+    localStorage.setItem(`notes_${user.id}`, JSON.stringify(updated));
   };
 
   return (

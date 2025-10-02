@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import { Send, Plus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { format } from 'date-fns';
@@ -55,9 +56,11 @@ const Chat = () => {
   };
 
   const selectedConvData = conversations.find(c => c.id === selectedConversation);
-  const otherParticipantName = selectedConvData?.participantNames.find(
-    name => name !== user?.name
+  const otherParticipantId = selectedConvData?.participantIds.find(
+    id => id !== user?.id
   );
+  const users = JSON.parse(localStorage.getItem('users') || '[]');
+  const otherParticipant = users.find((u: any) => u.id === otherParticipantId);
 
   return (
     <Layout>
@@ -123,7 +126,8 @@ const Chat = () => {
                   </p>
                 ) : (
                   conversations.map((conv) => {
-                    const otherName = conv.participantNames.find(name => name !== user?.name);
+                    const otherId = conv.participantIds.find(id => id !== user?.id);
+                    const otherUser = users.find((u: any) => u.id === otherId);
                     return (
                       <Button
                         key={conv.id}
@@ -131,17 +135,23 @@ const Chat = () => {
                         className="w-full justify-start p-4 h-auto"
                         onClick={() => setSelectedConversation(conv.id)}
                       >
-                        <div className="w-full text-left">
-                          <p className="font-medium">{otherName}</p>
+                        <Avatar className="mr-2 h-10 w-10">
+                          <AvatarImage src={otherUser?.imageUrl} />
+                          <AvatarFallback>{otherUser?.name?.charAt(0) || '?'}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 text-left">
+                          <div className="flex items-center justify-between">
+                            <p className="font-medium">{otherUser?.name || 'Usuário'}</p>
+                            {conv.unreadCount > 0 && (
+                              <Badge variant="destructive" className="ml-2">
+                                {conv.unreadCount}
+                              </Badge>
+                            )}
+                          </div>
                           {conv.lastMessage && (
                             <p className="text-xs text-muted-foreground truncate">
                               {conv.lastMessage}
                             </p>
-                          )}
-                          {conv.unreadCount > 0 && (
-                            <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded-full">
-                              {conv.unreadCount}
-                            </span>
                           )}
                         </div>
                       </Button>
@@ -154,8 +164,18 @@ const Chat = () => {
 
           <Card className="md:col-span-2">
             <CardHeader>
-              <CardTitle>
-                {selectedConversation ? otherParticipantName : 'Selecione uma conversa'}
+              <CardTitle className="flex items-center gap-2">
+                {selectedConversation && otherParticipant ? (
+                  <>
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={otherParticipant.imageUrl} />
+                      <AvatarFallback>{otherParticipant.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    {otherParticipant.name}
+                  </>
+                ) : (
+                  'Selecione uma conversa'
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col h-[500px]">
