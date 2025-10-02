@@ -9,9 +9,11 @@ import {
   FileText, 
   Settings, 
   LogOut,
-  Menu
+  Menu,
+  MessageSquare
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface LayoutProps {
   children: ReactNode;
@@ -27,6 +29,7 @@ const Layout = ({ children }: LayoutProps) => {
     { icon: Package, label: 'Produtos', path: '/products' },
     { icon: TrendingUp, label: 'Movimentações', path: '/movements' },
     { icon: FileText, label: 'Relatórios', path: '/reports' },
+    { icon: MessageSquare, label: 'Chat', path: '/chat' },
     { icon: Settings, label: 'Configurações', path: '/settings' },
   ];
 
@@ -38,8 +41,18 @@ const Layout = ({ children }: LayoutProps) => {
   const NavContent = () => (
     <div className="flex flex-col h-full">
       <div className="p-6 border-b">
-        <h2 className="text-xl font-bold">Sistema de Estoque</h2>
-        <p className="text-sm text-muted-foreground mt-1">{user?.name}</p>
+        <div className="flex items-center gap-3 mb-2">
+          <Avatar>
+            <AvatarImage src={user?.imageUrl} />
+            <AvatarFallback>{user?.name.charAt(0).toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div>
+            <h2 className="text-lg font-bold">{user?.name}</h2>
+            {user?.company && (
+              <p className="text-xs text-muted-foreground">{user.company}</p>
+            )}
+          </div>
+        </div>
       </div>
       
       <nav className="flex-1 p-4">
