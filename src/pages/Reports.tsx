@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download } from 'lucide-react';
+import { Download, TrendingUp, DollarSign, Package } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
 const Reports = () => {
   const { products, movements } = useStock();
@@ -59,6 +60,28 @@ const Reports = () => {
 
     return { totalValue, entries, exits };
   }, [filteredData, filteredMovements]);
+
+  const categoryData = useMemo(() => {
+    const categories = new Map<string, { count: number; value: number }>();
+    filteredData.forEach(p => {
+      const current = categories.get(p.category) || { count: 0, value: 0 };
+      categories.set(p.category, {
+        count: current.count + 1,
+        value: current.value + (p.price * p.quantity)
+      });
+    });
+    return Array.from(categories, ([name, data]) => ({ name, ...data }));
+  }, [filteredData]);
+
+  const stockLevelData = useMemo(() => {
+    return filteredData.map(p => ({
+      name: p.name.length > 20 ? p.name.substring(0, 20) + '...' : p.name,
+      quantidade: p.quantity,
+      valor: p.price * p.quantity
+    })).sort((a, b) => b.quantidade - a.quantidade).slice(0, 10);
+  }, [filteredData]);
+
+  const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 
   const exportToCSV = () => {
     const headers = ['Produto', 'Categoria', 'Quantidade', 'Preço', 'Fornecedor'];
@@ -156,32 +179,120 @@ const Reports = () => {
 
         {/* Estatísticas */}
         <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader>
+          <Card className="bg-gradient-to-br from-secondary/10 via-secondary/5 to-transparent border-secondary/20">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Valor Total em Estoque</CardTitle>
+              <div className="p-2 bg-secondary/10 rounded-lg">
+                <DollarSign className="h-5 w-5 text-secondary" />
+              </div>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">
+              <p className="text-3xl font-bold text-secondary">
                 {stats.totalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
+          <Card className="bg-gradient-to-br from-success/10 via-success/5 to-transparent border-success/20">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Total de Entradas</CardTitle>
+              <div className="p-2 bg-success/10 rounded-lg">
+                <TrendingUp className="h-5 w-5 text-success" />
+              </div>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-green-600">{stats.entries}</p>
+              <p className="text-3xl font-bold text-success">{stats.entries}</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-destructive/10 via-destructive/5 to-transparent border-destructive/20">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Total de Saídas</CardTitle>
+              <div className="p-2 bg-destructive/10 rounded-lg">
+                <TrendingUp className="h-5 w-5 text-destructive rotate-180" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-destructive">{stats.exits}</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Charts */}
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5 text-primary" />
+                Produtos com Maior Estoque
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {stockLevelData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={stockLevelData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
+                    <YAxis dataKey="name" type="category" width={150} stroke="hsl(var(--muted-foreground))" />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Bar dataKey="quantidade" fill="hsl(var(--primary))" radius={[0, 8, 8, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[350px] flex items-center justify-center text-muted-foreground">
+                  Nenhum dado disponível
+                </div>
+              )}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm font-medium">Total de Saídas</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="h-5 w-5 text-accent" />
+                Distribuição de Valor por Categoria
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-red-600">{stats.exits}</p>
+              {categoryData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={350}>
+                  <PieChart>
+                    <Pie
+                      data={categoryData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, value }) => `${name}: ${value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`}
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {categoryData.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                      formatter={(value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-[350px] flex items-center justify-center text-muted-foreground">
+                  Nenhuma categoria disponível
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

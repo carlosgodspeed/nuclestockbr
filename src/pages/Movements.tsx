@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useStock } from '@/contexts/StockContext';
 import { useAuth } from '@/contexts/AuthContext';
 import Layout from '@/components/Layout';
@@ -7,12 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, TrendingUp, TrendingDown } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, ArrowUpDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const Movements = () => {
   const { products, movements, addMovement } = useStock();
@@ -27,6 +28,34 @@ const Movements = () => {
     customer: '',
     reason: '',
   });
+
+  const chartData = useMemo(() => {
+    const last30Days = eachDayOfInterval({
+      start: subMonths(new Date(), 1),
+      end: new Date()
+    });
+
+    return last30Days.map(date => {
+      const dateStr = format(date, 'yyyy-MM-dd');
+      const dayMovements = movements.filter(m => 
+        format(new Date(m.date), 'yyyy-MM-dd') === dateStr
+      );
+      
+      const entries = dayMovements
+        .filter(m => m.type === 'entry')
+        .reduce((sum, m) => sum + m.quantity, 0);
+      
+      const exits = dayMovements
+        .filter(m => m.type === 'exit')
+        .reduce((sum, m) => sum + m.quantity, 0);
+
+      return {
+        date: format(date, 'dd/MM'),
+        entradas: entries,
+        saídas: exits
+      };
+    });
+  }, [movements]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -185,6 +214,49 @@ const Movements = () => {
             </DialogContent>
           </Dialog>
         </div>
+
+        {/* Chart */}
+        {movements.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ArrowUpDown className="h-5 w-5 text-primary" />
+                Movimentações nos Últimos 30 Dias
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" />
+                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="entradas" 
+                    stroke="hsl(var(--success))" 
+                    strokeWidth={2}
+                    dot={{ fill: 'hsl(var(--success))' }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="saídas" 
+                    stroke="hsl(var(--destructive))" 
+                    strokeWidth={2}
+                    dot={{ fill: 'hsl(var(--destructive))' }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
 
         {movements.length === 0 ? (
           <Card>
