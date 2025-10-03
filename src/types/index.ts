@@ -27,6 +27,7 @@ export interface Movement {
   productName: string;
   type: 'entry' | 'exit';
   quantity: number;
+  price: number;
   date: string;
   supplier?: string;
   customer?: string;

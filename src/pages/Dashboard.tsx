@@ -18,10 +18,10 @@ const Dashboard = () => {
   const stats = useMemo(() => {
     const totalProducts = products.length;
     const totalValue = products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
-    const entries = movements.filter(m => m.type === 'entry').reduce((sum, m) => sum + m.quantity, 0);
-    const exits = movements.filter(m => m.type === 'exit').reduce((sum, m) => sum + m.quantity, 0);
+    const entriesValue = movements.filter(m => m.type === 'entry').reduce((sum, m) => sum + (m.quantity * (m.price || 0)), 0);
+    const exitsValue = movements.filter(m => m.type === 'exit').reduce((sum, m) => sum + (m.quantity * (m.price || 0)), 0);
 
-    return { totalProducts, totalValue, entries, exits };
+    return { totalProducts, totalValue, entriesValue, exitsValue };
   }, [products, movements]);
 
   const categoryData = useMemo(() => {
@@ -96,25 +96,29 @@ const Dashboard = () => {
 
           <Card className="bg-gradient-to-br from-success/10 via-success/5 to-transparent border-success/20">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total de Entradas</CardTitle>
+              <CardTitle className="text-sm font-medium">Valor de Entradas</CardTitle>
               <div className="p-2 bg-success/10 rounded-lg">
                 <TrendingUp className="h-5 w-5 text-success" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-success">{stats.entries}</div>
+              <div className="text-3xl font-bold text-success">
+                {stats.entriesValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </div>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-destructive/10 via-destructive/5 to-transparent border-destructive/20">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total de Saídas</CardTitle>
+              <CardTitle className="text-sm font-medium">Valor de Saídas (Vendas)</CardTitle>
               <div className="p-2 bg-destructive/10 rounded-lg">
                 <TrendingDown className="h-5 w-5 text-destructive" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-destructive">{stats.exits}</div>
+              <div className="text-3xl font-bold text-destructive">
+                {stats.exitsValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </div>
             </CardContent>
           </Card>
         </div>

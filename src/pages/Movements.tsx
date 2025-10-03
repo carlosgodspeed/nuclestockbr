@@ -43,11 +43,11 @@ const Movements = () => {
       
       const entries = dayMovements
         .filter(m => m.type === 'entry')
-        .reduce((sum, m) => sum + m.quantity, 0);
+        .reduce((sum, m) => sum + (m.quantity * (m.price || 0)), 0);
       
       const exits = dayMovements
         .filter(m => m.type === 'exit')
-        .reduce((sum, m) => sum + m.quantity, 0);
+        .reduce((sum, m) => sum + (m.quantity * (m.price || 0)), 0);
 
       return {
         date: format(date, 'dd/MM'),
@@ -77,6 +77,7 @@ const Movements = () => {
       productName: product.name,
       type: formData.type,
       quantity: formData.quantity,
+      price: product.price,
       date: new Date().toISOString(),
       supplier: formData.supplier,
       customer: formData.customer,
@@ -236,6 +237,7 @@ const Movements = () => {
                       border: '1px solid hsl(var(--border))',
                       borderRadius: '8px'
                     }}
+                    formatter={(value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                   />
                   <Legend />
                   <Line 
