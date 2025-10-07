@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useStock } from '@/contexts/StockContext';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,9 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, TrendingUp, DollarSign, Package } from 'lucide-react';
+import { Download, TrendingUp, DollarSign, Package, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const Reports = () => {
   const { products, movements } = useStock();
@@ -17,6 +19,9 @@ const Reports = () => {
   const [category, setCategory] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
+  const barChartRef = useRef<HTMLDivElement>(null);
+  const pieChartRef = useRef<HTMLDivElement>(null);
 
   const categories = useMemo(() => {
     const cats = new Set(products.map(p => p.category));
@@ -83,28 +88,144 @@ const Reports = () => {
 
   const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 
-  const exportToCSV = () => {
-    const headers = ['Produto', 'Categoria', 'Quantidade', 'Preço', 'Fornecedor'];
-    const rows = filteredData.map(p => [
-      p.name,
-      p.category,
-      p.quantity,
-      p.price,
-      p.supplier,
-    ]);
+  const exportToPDF = async () => {
+    setIsExporting(true);
+    toast({ title: 'Gerando PDF...', description: 'Aguarde enquanto preparamos seu relatório' });
 
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.join(','))
-    ].join('\n');
+    try {
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      let yPosition = 20;
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `relatorio_estoque_${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
+      // Título
+      pdf.setFontSize(24);
+      pdf.setTextColor(59, 130, 246); // primary color
+      pdf.text('Relatório de Estoque', pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 15;
 
-    toast({ title: 'Relatório exportado com sucesso!' });
+      // Data do relatório
+      pdf.setFontSize(10);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 15;
+
+      // Estatísticas
+      pdf.setFontSize(16);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('Resumo Financeiro', 14, yPosition);
+      yPosition += 10;
+
+      pdf.setFontSize(11);
+      pdf.setTextColor(60, 60, 60);
+      pdf.text(`Valor Total em Estoque: ${stats.totalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, 14, yPosition);
+      yPosition += 7;
+      pdf.text(`Valor de Entradas: ${stats.entriesValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, 14, yPosition);
+      yPosition += 7;
+      pdf.text(`Valor de Saídas: ${stats.exitsValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, 14, yPosition);
+      yPosition += 15;
+
+      // Capturar gráfico de barras
+      if (barChartRef.current && stockLevelData.length > 0) {
+        const barCanvas = await html2canvas(barChartRef.current, { 
+          backgroundColor: '#ffffff',
+          scale: 2 
+        });
+        const barImgData = barCanvas.toDataURL('image/png');
+        const barImgWidth = pageWidth - 28;
+        const barImgHeight = (barCanvas.height * barImgWidth) / barCanvas.width;
+
+        if (yPosition + barImgHeight > pageHeight - 20) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+
+        pdf.setFontSize(14);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('Produtos com Maior Estoque', 14, yPosition);
+        yPosition += 10;
+        pdf.addImage(barImgData, 'PNG', 14, yPosition, barImgWidth, barImgHeight);
+        yPosition += barImgHeight + 15;
+      }
+
+      // Capturar gráfico de pizza
+      if (pieChartRef.current && categoryData.length > 0) {
+        if (yPosition > pageHeight - 100) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+
+        const pieCanvas = await html2canvas(pieChartRef.current, { 
+          backgroundColor: '#ffffff',
+          scale: 2 
+        });
+        const pieImgData = pieCanvas.toDataURL('image/png');
+        const pieImgWidth = pageWidth - 28;
+        const pieImgHeight = (pieCanvas.height * pieImgWidth) / pieCanvas.width;
+
+        pdf.setFontSize(14);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('Distribuição de Valor por Categoria', 14, yPosition);
+        yPosition += 10;
+        pdf.addImage(pieImgData, 'PNG', 14, yPosition, pieImgWidth, pieImgHeight);
+        yPosition += pieImgHeight + 15;
+      }
+
+      // Tabela de produtos
+      pdf.addPage();
+      yPosition = 20;
+      pdf.setFontSize(16);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('Lista de Produtos', 14, yPosition);
+      yPosition += 10;
+
+      // Cabeçalho da tabela
+      pdf.setFillColor(59, 130, 246);
+      pdf.rect(14, yPosition, pageWidth - 28, 8, 'F');
+      pdf.setFontSize(9);
+      pdf.setTextColor(255, 255, 255);
+      pdf.text('Produto', 16, yPosition + 5);
+      pdf.text('Categoria', 70, yPosition + 5);
+      pdf.text('Qtd', 120, yPosition + 5);
+      pdf.text('Preço', 140, yPosition + 5);
+      pdf.text('Total', 170, yPosition + 5);
+      yPosition += 10;
+
+      // Linhas da tabela
+      pdf.setTextColor(0, 0, 0);
+      filteredData.forEach((product, index) => {
+        if (yPosition > pageHeight - 20) {
+          pdf.addPage();
+          yPosition = 20;
+        }
+
+        if (index % 2 === 0) {
+          pdf.setFillColor(240, 240, 240);
+          pdf.rect(14, yPosition - 2, pageWidth - 28, 7, 'F');
+        }
+
+        pdf.setFontSize(8);
+        pdf.text(product.name.substring(0, 30), 16, yPosition + 3);
+        pdf.text(product.category.substring(0, 20), 70, yPosition + 3);
+        pdf.text(String(product.quantity), 120, yPosition + 3);
+        pdf.text(product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 140, yPosition + 3);
+        pdf.text((product.price * product.quantity).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 170, yPosition + 3);
+        yPosition += 7;
+      });
+
+      // Salvar PDF
+      pdf.save(`relatorio_estoque_${new Date().toISOString().split('T')[0]}.pdf`);
+      toast({ title: 'PDF exportado com sucesso!', description: 'Seu relatório foi baixado' });
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      toast({ 
+        title: 'Erro ao gerar PDF', 
+        description: 'Ocorreu um erro ao criar o relatório',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -116,9 +237,9 @@ const Reports = () => {
             <p className="text-muted-foreground">Visualize estatísticas e exporte dados</p>
           </div>
           
-          <Button onClick={exportToCSV}>
-            <Download className="mr-2 h-4 w-4" />
-            Exportar CSV
+          <Button onClick={exportToPDF} disabled={isExporting}>
+            <FileText className="mr-2 h-4 w-4" />
+            {isExporting ? 'Gerando PDF...' : 'Exportar PDF'}
           </Button>
         </div>
 
@@ -232,6 +353,7 @@ const Reports = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              <div ref={barChartRef}>
               {stockLevelData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={350}>
                   <BarChart data={stockLevelData} layout="vertical">
@@ -253,6 +375,7 @@ const Reports = () => {
                   Nenhum dado disponível
                 </div>
               )}
+              </div>
             </CardContent>
           </Card>
 
@@ -264,6 +387,7 @@ const Reports = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              <div ref={pieChartRef}>
               {categoryData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={350}>
                   <PieChart>
@@ -297,6 +421,7 @@ const Reports = () => {
                   Nenhuma categoria disponível
                 </div>
               )}
+              </div>
             </CardContent>
           </Card>
         </div>
