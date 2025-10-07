@@ -136,18 +136,25 @@ const Dashboard = () => {
               {topProducts.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={topProducts}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
-                    <YAxis stroke="hsl(var(--muted-foreground))" />
+                    <defs>
+                      <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.9}/>
+                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                    <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" style={{ fontSize: '12px' }} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" style={{ fontSize: '12px' }} />
                     <Tooltip 
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
+                        border: '1px solid hsl(var(--primary))',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
                       }}
                       formatter={(value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     />
-                    <Bar dataKey="value" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="value" fill="url(#colorValue)" radius={[8, 8, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
@@ -175,9 +182,11 @@ const Dashboard = () => {
                       cy="50%"
                       labelLine={false}
                       label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                      outerRadius={80}
+                      outerRadius={90}
+                      innerRadius={50}
                       fill="#8884d8"
                       dataKey="value"
+                      paddingAngle={3}
                     >
                       {categoryData.map((_, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -186,8 +195,9 @@ const Dashboard = () => {
                     <Tooltip 
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
+                        border: '1px solid hsl(var(--primary))',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
                       }}
                       formatter={(value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     />

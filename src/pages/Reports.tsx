@@ -357,17 +357,24 @@ const Reports = () => {
               {stockLevelData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={350}>
                   <BarChart data={stockLevelData} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <defs>
+                      <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.9}/>
+                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                     <XAxis type="number" stroke="hsl(var(--muted-foreground))" />
                     <YAxis dataKey="name" type="category" width={150} stroke="hsl(var(--muted-foreground))" />
                     <Tooltip 
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
+                        border: '1px solid hsl(var(--primary))',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
                       }}
                     />
-                    <Bar dataKey="quantidade" fill="hsl(var(--primary))" radius={[0, 8, 8, 0]} />
+                    <Bar dataKey="quantidade" fill="url(#barGradient)" radius={[0, 8, 8, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (

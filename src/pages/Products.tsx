@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useStock } from '@/contexts/StockContext';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -7,14 +7,23 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus, Edit, Trash2, Package } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Edit, Trash2, Package, Smartphone, Shirt, Utensils } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+
+const CATEGORIES = [
+  { value: 'Eletrônicos', label: 'Eletrônicos', icon: Smartphone },
+  { value: 'Roupas', label: 'Roupas', icon: Shirt },
+  { value: 'Utensílios', label: 'Utensílios', icon: Utensils },
+];
 
 const Products = () => {
   const { products, addProduct, updateProduct, deleteProduct } = useStock();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -24,6 +33,19 @@ const Products = () => {
     supplier: '',
     imageUrl: '',
   });
+
+  const filteredProducts = useMemo(() => {
+    if (selectedCategory === 'all') return products;
+    return products.filter(p => p.category === selectedCategory);
+  }, [products, selectedCategory]);
+
+  const productsByCategory = useMemo(() => {
+    return CATEGORIES.map(cat => ({
+      ...cat,
+      products: products.filter(p => p.category === cat.value),
+      count: products.filter(p => p.category === cat.value).length
+    }));
+  }, [products]);
 
   const resetForm = () => {
     setFormData({
@@ -115,12 +137,21 @@ const Products = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="category">Categoria *</Label>
-                    <Input
-                      id="category"
-                      value={formData.category}
-                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                      required
-                    />
+                    <Select 
+                      value={formData.category} 
+                      onValueChange={(value) => setFormData({ ...formData, category: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma categoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CATEGORIES.map((cat) => (
+                          <SelectItem key={cat.value} value={cat.value}>
+                            {cat.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
@@ -204,70 +235,131 @@ const Products = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {products.map((product) => (
-              <Card key={product.id}>
-                <CardContent className="p-4">
-                  {product.imageUrl && (
-                    <img
-                      src={product.imageUrl}
-                      alt={product.name}
-                      className="w-full h-48 object-cover rounded-lg mb-4"
-                    />
-                  )}
-                  
-                  <h3 className="font-semibold text-lg mb-1">{product.name}</h3>
-                  <p className="text-sm text-muted-foreground mb-2">{product.category}</p>
-                  
-                  {product.description && (
-                    <p className="text-sm mb-3 line-clamp-2">{product.description}</p>
-                  )}
-                  
-                  <div className="space-y-1 mb-4">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Quantidade:</span>
-                      <span className="font-medium">{product.quantity} un.</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Preço:</span>
-                      <span className="font-medium">
-                        {product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                      </span>
-                    </div>
-                    {product.supplier && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Fornecedor:</span>
-                        <span className="font-medium">{product.supplier}</span>
-                      </div>
-                    )}
-                  </div>
+          <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
+            <TabsList className="grid w-full grid-cols-4 mb-6">
+              <TabsTrigger value="all" className="gap-2">
+                <Package className="h-4 w-4" />
+                Todos ({products.length})
+              </TabsTrigger>
+              {CATEGORIES.map((cat) => {
+                const Icon = cat.icon;
+                const count = products.filter(p => p.category === cat.value).length;
+                return (
+                  <TabsTrigger key={cat.value} value={cat.value} className="gap-2">
+                    <Icon className="h-4 w-4" />
+                    {cat.label} ({count})
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
 
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => handleEdit(product.id)}
-                    >
-                      <Edit className="mr-2 h-4 w-4" />
-                      Editar
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDelete(product.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+            <TabsContent value="all" className="mt-0">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {products.map((product) => (
+                  <ProductCard 
+                    key={product.id}
+                    product={product}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </div>
+            </TabsContent>
+
+            {CATEGORIES.map((cat) => (
+              <TabsContent key={cat.value} value={cat.value} className="mt-0">
+                {products.filter(p => p.category === cat.value).length === 0 ? (
+                  <Card>
+                    <CardContent className="flex flex-col items-center justify-center py-16">
+                      <cat.icon className="h-16 w-16 text-muted-foreground mb-4" />
+                      <p className="text-lg font-medium mb-2">Nenhum produto em {cat.label}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Cadastre produtos nesta categoria
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {products.filter(p => p.category === cat.value).map((product) => (
+                      <ProductCard 
+                        key={product.id}
+                        product={product}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                      />
+                    ))}
                   </div>
-                </CardContent>
-              </Card>
+                )}
+              </TabsContent>
             ))}
-          </div>
+          </Tabs>
         )}
       </div>
     </Layout>
   );
 };
+
+const ProductCard = ({ product, onEdit, onDelete }: { 
+  product: any; 
+  onEdit: (id: string) => void; 
+  onDelete: (id: string) => void;
+}) => (
+  <Card className="hover:shadow-lg transition-shadow">
+    <CardContent className="p-4">
+      {product.imageUrl && (
+        <img
+          src={product.imageUrl}
+          alt={product.name}
+          className="w-full h-48 object-cover rounded-lg mb-4"
+        />
+      )}
+      
+      <h3 className="font-semibold text-lg mb-1">{product.name}</h3>
+      <p className="text-sm text-muted-foreground mb-2">{product.category}</p>
+      
+      {product.description && (
+        <p className="text-sm mb-3 line-clamp-2">{product.description}</p>
+      )}
+      
+      <div className="space-y-1 mb-4">
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Quantidade:</span>
+          <span className="font-medium">{product.quantity} un.</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Preço:</span>
+          <span className="font-medium">
+            {product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          </span>
+        </div>
+        {product.supplier && (
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Fornecedor:</span>
+            <span className="font-medium">{product.supplier}</span>
+          </div>
+        )}
+      </div>
+
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex-1"
+          onClick={() => onEdit(product.id)}
+        >
+          <Edit className="mr-2 h-4 w-4" />
+          Editar
+        </Button>
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={() => onDelete(product.id)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </CardContent>
+  </Card>
+);
 
 export default Products;
