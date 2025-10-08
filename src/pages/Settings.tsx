@@ -1,13 +1,14 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Camera } from 'lucide-react';
+import { Camera, Moon, Sun } from 'lucide-react';
 
 const Settings = () => {
   const { user, updateProfile } = useAuth();
@@ -16,7 +17,20 @@ const Settings = () => {
   const [email, setEmail] = useState(user?.email || '');
   const [company, setCompany] = useState(user?.company || '');
   const [imageUrl, setImageUrl] = useState(user?.imageUrl || '');
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem('darkMode');
+    return saved === 'true';
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('darkMode', darkMode.toString());
+  }, [darkMode]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -115,6 +129,30 @@ const Settings = () => {
 
               <Button type="submit">Salvar Alterações</Button>
             </form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Aparência</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="dark-mode" className="text-base">Modo Escuro</Label>
+                <p className="text-sm text-muted-foreground">
+                  Alterne entre tema claro e escuro
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {darkMode ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+                <Switch
+                  id="dark-mode"
+                  checked={darkMode}
+                  onCheckedChange={setDarkMode}
+                />
+              </div>
+            </div>
           </CardContent>
         </Card>
 

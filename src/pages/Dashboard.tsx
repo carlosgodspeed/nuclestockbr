@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Package, TrendingUp, TrendingDown, DollarSign, Search, Plus, X, BarChart3 } from 'lucide-react';
+import { Package, TrendingUp, ShoppingCart, DollarSign, Search, Plus, X, BarChart3 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const Dashboard = () => {
@@ -19,9 +19,9 @@ const Dashboard = () => {
     const totalProducts = products.length;
     const totalValue = products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
     const entriesValue = movements.filter(m => m.type === 'entry').reduce((sum, m) => sum + (m.quantity * (m.price || 0)), 0);
-    const exitsValue = movements.filter(m => m.type === 'exit').reduce((sum, m) => sum + (m.quantity * (m.price || 0)), 0);
+    const exitsQuantity = movements.filter(m => m.type === 'exit').reduce((sum, m) => sum + m.quantity, 0);
 
-    return { totalProducts, totalValue, entriesValue, exitsValue };
+    return { totalProducts, totalValue, entriesValue, exitsQuantity };
   }, [products, movements]);
 
   const categoryData = useMemo(() => {
@@ -94,30 +94,30 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-success/10 via-success/5 to-transparent border-success/20">
+          <Card className="bg-gradient-to-br from-pink-500/10 via-pink-500/5 to-transparent border-pink-500/20">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Valor de Entradas</CardTitle>
-              <div className="p-2 bg-success/10 rounded-lg">
-                <TrendingUp className="h-5 w-5 text-success" />
+              <div className="p-2 bg-pink-500/10 rounded-lg">
+                <TrendingUp className="h-5 w-5 text-pink-500" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-success">
+              <div className="text-3xl font-bold text-pink-500">
                 {stats.entriesValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-destructive/10 via-destructive/5 to-transparent border-destructive/20">
+          <Card className="bg-gradient-to-br from-yellow-500/10 via-yellow-500/5 to-transparent border-yellow-500/20">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Valor de Saídas (Vendas)</CardTitle>
-              <div className="p-2 bg-destructive/10 rounded-lg">
-                <TrendingDown className="h-5 w-5 text-destructive" />
+              <CardTitle className="text-sm font-medium">Quantidade de Saídas</CardTitle>
+              <div className="p-2 bg-yellow-500/10 rounded-lg">
+                <ShoppingCart className="h-5 w-5 text-yellow-500" />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-destructive">
-                {stats.exitsValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              <div className="text-3xl font-bold text-yellow-500">
+                {stats.exitsQuantity} un.
               </div>
             </CardContent>
           </Card>

@@ -9,17 +9,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, TrendingUp, TrendingDown, ArrowUpDown } from 'lucide-react';
+import { Plus, TrendingUp, ShoppingCart, ArrowUpDown, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, subMonths } from 'date-fns';
+import { format, eachDayOfInterval, subDays, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 const Movements = () => {
   const { products, movements, addMovement } = useStock();
   const { user } = useAuth();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [periodFilter, setPeriodFilter] = useState('30');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [formData, setFormData] = useState({
     productId: '',
     type: 'entry' as 'entry' | 'exit',
@@ -29,15 +31,34 @@ const Movements = () => {
     reason: '',
   });
 
+  const categories = useMemo(() => {
+    const cats = new Set(products.map(p => p.category));
+    return ['all', ...Array.from(cats)];
+  }, [products]);
+
+  const filteredMovements = useMemo(() => {
+    let filtered = movements;
+    
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(m => {
+        const product = products.find(p => p.id === m.productId);
+        return product?.category === categoryFilter;
+      });
+    }
+    
+    return filtered;
+  }, [movements, categoryFilter, products]);
+
   const chartData = useMemo(() => {
-    const last30Days = eachDayOfInterval({
-      start: subMonths(new Date(), 1),
+    const days = parseInt(periodFilter);
+    const period = eachDayOfInterval({
+      start: subDays(new Date(), days - 1),
       end: new Date()
     });
 
-    return last30Days.map(date => {
+    return period.map(date => {
       const dateStr = format(date, 'yyyy-MM-dd');
-      const dayMovements = movements.filter(m => 
+      const dayMovements = filteredMovements.filter(m => 
         format(new Date(m.date), 'yyyy-MM-dd') === dateStr
       );
       
@@ -47,7 +68,7 @@ const Movements = () => {
       
       const exits = dayMovements
         .filter(m => m.type === 'exit')
-        .reduce((sum, m) => sum + (m.quantity * (m.price || 0)), 0);
+        .reduce((sum, m) => sum + m.quantity, 0);
 
       return {
         date: format(date, 'dd/MM'),
@@ -55,7 +76,28 @@ const Movements = () => {
         saídas: exits
       };
     });
-  }, [movements]);
+  }, [filteredMovements, periodFilter]);
+
+  const categoryChartData = useMemo(() => {
+    const categoryStats = new Map<string, { entradas: number; saidas: number }>();
+    
+    filteredMovements.forEach(m => {
+      const product = products.find(p => p.id === m.productId);
+      if (!product) return;
+      
+      const current = categoryStats.get(product.category) || { entradas: 0, saidas: 0 };
+      
+      if (m.type === 'entry') {
+        current.entradas += m.quantity * (m.price || 0);
+      } else {
+        current.saidas += m.quantity;
+      }
+      
+      categoryStats.set(product.category, current);
+    });
+    
+    return Array.from(categoryStats, ([name, data]) => ({ name, ...data }));
+  }, [filteredMovements, products]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -216,48 +258,159 @@ const Movements = () => {
           </Dialog>
         </div>
 
-        {/* Chart */}
+        {/* Filters */}
         {movements.length > 0 && (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <ArrowUpDown className="h-5 w-5 text-primary" />
-                Movimentações nos Últimos 30 Dias
+                <Calendar className="h-5 w-5 text-primary" />
+                Filtros
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" />
-                  <YAxis stroke="hsl(var(--muted-foreground))" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }}
-                    formatter={(value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                  />
-                  <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="entradas" 
-                    stroke="hsl(var(--success))" 
-                    strokeWidth={2}
-                    dot={{ fill: 'hsl(var(--success))' }}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="saídas" 
-                    stroke="hsl(var(--destructive))" 
-                    strokeWidth={2}
-                    dot={{ fill: 'hsl(var(--destructive))' }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Período</Label>
+                  <Select value={periodFilter} onValueChange={setPeriodFilter}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="7">Últimos 7 dias</SelectItem>
+                      <SelectItem value="15">Últimos 15 dias</SelectItem>
+                      <SelectItem value="30">Últimos 30 dias</SelectItem>
+                      <SelectItem value="60">Últimos 60 dias</SelectItem>
+                      <SelectItem value="90">Últimos 90 dias</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Categoria</Label>
+                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas as categorias</SelectItem>
+                      {categories.slice(1).map(cat => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Charts */}
+        {movements.length > 0 && (
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ArrowUpDown className="h-5 w-5 text-primary" />
+                  Movimentações no Período
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={chartData}>
+                    <defs>
+                      <linearGradient id="pinkGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="rgb(236, 72, 153)" stopOpacity={0.9}/>
+                        <stop offset="100%" stopColor="rgb(236, 72, 153)" stopOpacity={0.4}/>
+                      </linearGradient>
+                      <linearGradient id="yellowGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="rgb(234, 179, 8)" stopOpacity={0.9}/>
+                        <stop offset="100%" stopColor="rgb(234, 179, 8)" stopOpacity={0.4}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                    <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" />
+                    <YAxis stroke="hsl(var(--muted-foreground))" />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+                      }}
+                      formatter={(value: number, name: string) => {
+                        if (name === 'entradas') {
+                          return [value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 'Entradas (R$)'];
+                        }
+                        return [`${value} un.`, 'Saídas (Quantidade)'];
+                      }}
+                    />
+                    <Legend />
+                    <Line 
+                      type="monotone" 
+                      dataKey="entradas" 
+                      stroke="rgb(236, 72, 153)" 
+                      strokeWidth={3}
+                      dot={{ fill: 'rgb(236, 72, 153)', r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="saídas" 
+                      stroke="rgb(234, 179, 8)" 
+                      strokeWidth={3}
+                      dot={{ fill: 'rgb(234, 179, 8)', r: 4 }}
+                      activeDot={{ r: 6 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-accent" />
+                  Movimentações por Categoria
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={categoryChartData}>
+                    <defs>
+                      <linearGradient id="pinkBar" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="rgb(236, 72, 153)" stopOpacity={0.9}/>
+                        <stop offset="100%" stopColor="rgb(236, 72, 153)" stopOpacity={0.4}/>
+                      </linearGradient>
+                      <linearGradient id="yellowBar" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="rgb(234, 179, 8)" stopOpacity={0.9}/>
+                        <stop offset="100%" stopColor="rgb(234, 179, 8)" stopOpacity={0.4}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                    <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
+                    <YAxis stroke="hsl(var(--muted-foreground))" />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+                      }}
+                      formatter={(value: number, name: string) => {
+                        if (name === 'entradas') {
+                          return [value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 'Entradas (R$)'];
+                        }
+                        return [`${value} un.`, 'Saídas (Quantidade)'];
+                      }}
+                    />
+                    <Legend />
+                    <Bar dataKey="entradas" fill="url(#pinkBar)" radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="saídas" fill="url(#yellowBar)" radius={[8, 8, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
         )}
 
         {movements.length === 0 ? (
@@ -272,15 +425,15 @@ const Movements = () => {
           </Card>
         ) : (
           <div className="space-y-3">
-            {[...movements].reverse().map((movement) => (
+            {[...filteredMovements].reverse().map((movement) => (
               <Card key={movement.id}>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3 flex-1">
                       {movement.type === 'entry' ? (
-                        <TrendingUp className="h-5 w-5 text-green-600 mt-1" />
+                        <TrendingUp className="h-5 w-5 text-pink-500 mt-1" />
                       ) : (
-                        <TrendingDown className="h-5 w-5 text-red-600 mt-1" />
+                        <ShoppingCart className="h-5 w-5 text-yellow-500 mt-1" />
                       )}
                       
                       <div className="flex-1">
