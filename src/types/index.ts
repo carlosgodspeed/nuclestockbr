@@ -5,6 +5,12 @@ export interface User {
   role: 'admin' | 'user' | 'supplier';
   imageUrl?: string;
   company?: string;
+  businessCategory?: 'bebidas' | 'diversos' | 'eletronicos' | 'roupas' | 'varejo';
+  description?: string;
+  productImages?: string[];
+  promotionalImage?: string;
+  promotionalImageDays?: number;
+  promotionalImageCreatedAt?: string;
   createdAt: string;
 }
 

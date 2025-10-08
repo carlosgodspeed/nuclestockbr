@@ -14,6 +14,7 @@ import Movements from "./pages/Movements";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Chat from "./pages/Chat";
+import SupplierProfile from "./pages/SupplierProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
                 <Route path="/movements" element={<ProtectedRoute><Movements /></ProtectedRoute>} />
                 <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
                 <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+                <Route path="/supplier/:id" element={<ProtectedRoute><SupplierProfile /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
