@@ -78,7 +78,7 @@ const Dashboard = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-primary">{stats.totalProducts}</div>
+              <div className="text-2xl md:text-3xl font-bold text-primary break-words">{stats.totalProducts}</div>
             </CardContent>
           </Card>
 
@@ -90,7 +90,7 @@ const Dashboard = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-secondary">
+              <div className="text-xl md:text-2xl lg:text-3xl font-bold text-secondary break-words">
                 {stats.totalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </div>
             </CardContent>
@@ -104,7 +104,7 @@ const Dashboard = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-pink-500">
+              <div className="text-xl md:text-2xl lg:text-3xl font-bold text-pink-500 break-words">
                 {stats.entriesValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </div>
             </CardContent>
@@ -118,7 +118,7 @@ const Dashboard = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-yellow-500">
+              <div className="text-2xl md:text-3xl font-bold text-yellow-500 break-words">
                 {stats.exitsQuantity} un.
               </div>
             </CardContent>
