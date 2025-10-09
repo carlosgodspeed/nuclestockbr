@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Package, TrendingUp, ShoppingCart, DollarSign, Search, Plus, X, BarChart3 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import PromotionsWidget from '@/components/PromotionsWidget';
 
 const Dashboard = () => {
   const { products, movements, notes, addNote, deleteNote } = useStock();
@@ -61,8 +60,7 @@ const Dashboard = () => {
 
   return (
     <Layout>
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-        <div className="xl:col-span-3 space-y-6">
+      <div className="space-y-6">
           <div>
             <h1 className="text-3xl font-bold">Dashboard</h1>
             <p className="text-muted-foreground">Visão geral do seu estoque</p>
@@ -298,14 +296,6 @@ const Dashboard = () => {
           </Card>
         </div>
       </div>
-
-      {/* Promotions Widget - Right Column */}
-      <div className="xl:col-span-1">
-        <div className="sticky top-6">
-          <PromotionsWidget />
-        </div>
-      </div>
-    </div>
     </Layout>
   );
 };
