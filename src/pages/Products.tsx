@@ -7,9 +7,16 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Edit, Trash2, Package } from 'lucide-react';
+import { Plus, Edit, Trash2, Package, Smartphone, Shirt, Utensils } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+
+const CATEGORIES = [
+  { value: 'Eletrônicos', label: 'Eletrônicos', icon: Smartphone },
+  { value: 'Roupas', label: 'Roupas', icon: Shirt },
+  { value: 'Utensílios', label: 'Utensílios', icon: Utensils },
+];
 
 const Products = () => {
   const { products, addProduct, updateProduct, deleteProduct } = useStock();
@@ -17,11 +24,6 @@ const Products = () => {
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [categories, setCategories] = useState<string[]>(() => {
-    const saved = localStorage.getItem('productCategories');
-    return saved ? JSON.parse(saved) : ['Eletrônicos', 'Roupas', 'Utensílios'];
-  });
-  const [newCategoryName, setNewCategoryName] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -38,26 +40,12 @@ const Products = () => {
   }, [products, selectedCategory]);
 
   const productsByCategory = useMemo(() => {
-    return categories.map(cat => ({
-      value: cat,
-      label: cat,
-      products: products.filter(p => p.category === cat),
-      count: products.filter(p => p.category === cat).length
+    return CATEGORIES.map(cat => ({
+      ...cat,
+      products: products.filter(p => p.category === cat.value),
+      count: products.filter(p => p.category === cat.value).length
     }));
-  }, [products, categories]);
-
-  const addCategory = () => {
-    if (!newCategoryName.trim()) return;
-    if (categories.includes(newCategoryName.trim())) {
-      toast({ title: 'Categoria já existe!', variant: 'destructive' });
-      return;
-    }
-    const updated = [...categories, newCategoryName.trim()];
-    setCategories(updated);
-    localStorage.setItem('productCategories', JSON.stringify(updated));
-    setNewCategoryName('');
-    toast({ title: 'Categoria adicionada!' });
-  };
+  }, [products]);
 
   const resetForm = () => {
     setFormData({
@@ -149,35 +137,21 @@ const Products = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="category">Categoria *</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Nova categoria..."
-                        value={newCategoryName}
-                        onChange={(e) => setNewCategoryName(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            addCategory();
-                          }
-                        }}
-                      />
-                      <Button type="button" onClick={addCategory} size="icon">
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {categories.map((cat) => (
-                        <Button
-                          key={cat}
-                          type="button"
-                          variant={formData.category === cat ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => setFormData({ ...formData, category: cat })}
-                        >
-                          {cat}
-                        </Button>
-                      ))}
-                    </div>
+                    <Select 
+                      value={formData.category} 
+                      onValueChange={(value) => setFormData({ ...formData, category: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma categoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CATEGORIES.map((cat) => (
+                          <SelectItem key={cat.value} value={cat.value}>
+                            {cat.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
@@ -262,22 +236,22 @@ const Products = () => {
           </Card>
         ) : (
           <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
-            <div className="overflow-x-auto">
-              <TabsList className="inline-flex w-auto min-w-full mb-6">
-                <TabsTrigger value="all" className="gap-2">
-                  <Package className="h-4 w-4" />
-                  Todos ({products.length})
-                </TabsTrigger>
-                {categories.map((cat) => {
-                  const count = products.filter(p => p.category === cat).length;
-                  return (
-                    <TabsTrigger key={cat} value={cat} className="gap-2 whitespace-nowrap">
-                      {cat} ({count})
-                    </TabsTrigger>
-                  );
-                })}
-              </TabsList>
-            </div>
+            <TabsList className="grid w-full grid-cols-4 mb-6">
+              <TabsTrigger value="all" className="gap-2">
+                <Package className="h-4 w-4" />
+                Todos ({products.length})
+              </TabsTrigger>
+              {CATEGORIES.map((cat) => {
+                const Icon = cat.icon;
+                const count = products.filter(p => p.category === cat.value).length;
+                return (
+                  <TabsTrigger key={cat.value} value={cat.value} className="gap-2">
+                    <Icon className="h-4 w-4" />
+                    {cat.label} ({count})
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
 
             <TabsContent value="all" className="mt-0">
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -292,13 +266,13 @@ const Products = () => {
               </div>
             </TabsContent>
 
-            {categories.map((cat) => (
-              <TabsContent key={cat} value={cat} className="mt-0">
-                {products.filter(p => p.category === cat).length === 0 ? (
+            {CATEGORIES.map((cat) => (
+              <TabsContent key={cat.value} value={cat.value} className="mt-0">
+                {products.filter(p => p.category === cat.value).length === 0 ? (
                   <Card>
                     <CardContent className="flex flex-col items-center justify-center py-16">
-                      <Package className="h-16 w-16 text-muted-foreground mb-4" />
-                      <p className="text-lg font-medium mb-2">Nenhum produto em {cat}</p>
+                      <cat.icon className="h-16 w-16 text-muted-foreground mb-4" />
+                      <p className="text-lg font-medium mb-2">Nenhum produto em {cat.label}</p>
                       <p className="text-sm text-muted-foreground">
                         Cadastre produtos nesta categoria
                       </p>
@@ -306,7 +280,7 @@ const Products = () => {
                   </Card>
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {products.filter(p => p.category === cat).map((product) => (
+                    {products.filter(p => p.category === cat.value).map((product) => (
                       <ProductCard 
                         key={product.id}
                         product={product}

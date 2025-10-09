@@ -67,9 +67,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const sendMessage = (conversationId: string, content: string) => {
     if (!user) return;
 
-    const conversation = conversations.find(c => c.id === conversationId);
-    if (!conversation) return;
-
     const newMessage: ChatMessage = {
       id: crypto.randomUUID(),
       conversationId,
@@ -80,35 +77,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       read: false,
     };
 
-    // Salvar mensagem para o usuário atual
     const updatedMessages = [...messages, newMessage];
     setMessages(updatedMessages);
     localStorage.setItem(`chatMessages_${user.id}`, JSON.stringify(updatedMessages));
 
-    // Salvar mensagem para o outro participante
-    const otherParticipantId = conversation.participantIds.find(id => id !== user.id);
-    if (otherParticipantId) {
-      const otherMessages = JSON.parse(localStorage.getItem(`chatMessages_${otherParticipantId}`) || '[]');
-      const updatedOtherMessages = [...otherMessages, newMessage];
-      localStorage.setItem(`chatMessages_${otherParticipantId}`, JSON.stringify(updatedOtherMessages));
-
-      // Atualizar conversas do outro participante
-      const otherConversations = JSON.parse(localStorage.getItem(`conversations_${otherParticipantId}`) || '[]');
-      const updatedOtherConversations = otherConversations.map((conv: Conversation) => {
-        if (conv.id === conversationId) {
-          return {
-            ...conv,
-            lastMessage: content,
-            lastMessageAt: newMessage.createdAt,
-            unreadCount: (conv.unreadCount || 0) + 1,
-          };
-        }
-        return conv;
-      });
-      localStorage.setItem(`conversations_${otherParticipantId}`, JSON.stringify(updatedOtherConversations));
-    }
-
-    // Atualizar conversas do usuário atual
     const updatedConversations = conversations.map(conv => {
       if (conv.id === conversationId) {
         return {
