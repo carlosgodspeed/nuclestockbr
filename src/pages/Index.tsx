@@ -13,8 +13,7 @@ import {
   CheckCircle2,
   Sparkles,
   Users,
-  FileText,
-  Eye
+  FileText
 } from 'lucide-react';
 
 const Index = () => {
@@ -111,15 +110,6 @@ const Index = () => {
             >
               Começar Agora
               <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="text-lg px-8 py-6"
-              onClick={() => navigate('/auth')}
-            >
-              <Eye className="mr-2 h-5 w-5" />
-              Ver Demo
             </Button>
           </div>
         </div>
