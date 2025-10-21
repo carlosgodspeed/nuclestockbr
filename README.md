@@ -1,4 +1,4 @@
-## 📦 Sistema de Estoque – Projeto
+## 📦 NucleStockBR – Projeto
 
 O **Sistema de Estoque** é uma aplicação web desenvolvida em **React.js com TypeScript e TailwindCSS**, focada em oferecer uma experiência moderna, responsiva e intuitiva para a gestão de produtos, fornecedores e movimentações de estoque.
 
