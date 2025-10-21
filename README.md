@@ -1,73 +1,56 @@
-# Welcome to your Lovable project
+## 📦 Sistema de Estoque – Projeto
 
-## Project info
+O **Sistema de Estoque** é uma aplicação web desenvolvida em **React.js com TypeScript e TailwindCSS**, focada em oferecer uma experiência moderna, responsiva e intuitiva para a gestão de produtos, fornecedores e movimentações de estoque.
 
-**URL**: https://lovable.dev/projects/9c61e19e-ba2b-4136-95fd-b27fb6cb048b
+### ✨ Funcionalidades Principais
 
-## How can I edit this code?
+- **Página inicial de apresentação** com explicação clara do sistema.
+- **Cadastro e login de usuários** com autenticação segura.
+- **Dashboard interativo** com resumo do estoque, estatísticas e gráficos.
+- **CRUD de produtos**: adicionar, editar, remover e visualizar produtos com foto, descrição, categoria, fornecedor e preço.
+- **Cadastro de fornecedores** com dados de contato e histórico de produtos.
+- **Movimentações de estoque**: registro de entradas e saídas com data, quantidade e observações.
+- **Pesquisa e filtros avançados** por nome, categoria e período.
+- **Notas e lembretes rápidos** para organização do usuário.
+- **Chat interativo** entre usuários e fornecedores.
+- **Perfis personalizáveis** (foto, informações pessoais e preferências).
+- **Relatórios exportáveis** em PDF e Excel.
 
-There are several ways of editing your application.
+### 🛠 Tecnologias Utilizadas
 
-**Use Lovable**
+- **React.js** – framework para criação da interface.
+- **TypeScript** – tipagem estática para maior confiabilidade do código.
+- **TailwindCSS** – estilização moderna e responsiva.
+- **Recharts/Chart.js** – exibição de gráficos e estatísticas.
+- **IndexedDB / LocalStorage / JSON Server** – persistência de dados no front-end.
+- **(Opcional)** WebSockets/Socket.io para chat em tempo real.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/9c61e19e-ba2b-4136-95fd-b27fb6cb048b) and start prompting.
+### 🎯 Objetivo do Projeto
 
-Changes made via Lovable will be committed automatically to this repo.
+Desenvolver um sistema de estoque completo e interativo que centralize o controle de produtos e fornecedores, facilite a comunicação com chat integrado e ofereça relatórios detalhados em uma interface rápida, segura e personalizável.
 
-**Use your preferred IDE**
+### Funcionalidades Implementadas
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- [x]  Página inicial com apresentação do sistema.
+- [x]  Cadastro e login de usuários (com validação básica).
+- [x]  Dashboard com resumo do estoque (total de produtos, entradas e saídas).
+- [x]  CRUD de produtos (adicionar, editar, remover) com foto, descrição, categoria e preço.
+- [x]  Cadastro de fornecedores.
+- [x]  Pesquisa e filtros básicos por nome e categoria.
+- [x]  Notas e lembretes no dashboard.
+- [x]  Perfis de usuário personalizáveis (foto e informações básicas).
+- [x]  Front-end desenvolvido com React.js, TypeScript e TailwindCSS.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 🔹 Funcionalidades a Implementar
 
-Follow these steps:
+- [ ]  Movimentações de estoque (entrada/saída) com histórico detalhado.
+- [ ]  Atualização automática do estoque em tempo real.
+- [ ]  Chat interativo entre usuários e fornecedores.
+- [ ]  Relatórios exportáveis (PDF e Excel) por período.
+- [ ]  Filtros avançados por datas e categorias nos relatórios.
+- [ ]  Dark mode / tema personalizável.
+- [ ]  Sistema de autenticação seguro completo (JWT ou outra forma).
+- [ ]  Persistência de dados mais robusta (IndexedDB ou integração com back-end).
+- [ ]  Notificações automáticas quando o estoque estiver baixo.
+- [ ]  Logs de atividades do usuário para rastreabilidade.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/9c61e19e-ba2b-4136-95fd-b27fb6cb048b) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
