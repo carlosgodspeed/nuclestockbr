@@ -54,3 +54,6 @@ Desenvolver um sistema de estoque completo e interativo que centralize o control
 - [ ]  Notificações automáticas quando o estoque estiver baixo.
 - [ ]  Logs de atividades do usuário para rastreabilidade.
 
+### 🔹 Imagens
+![project-dashboard](https://github.com/user-attachments/assets/1d1d5650-7bb8-4159-ae43-403456913c46)
+
