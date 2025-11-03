@@ -7,8 +7,6 @@ import {
   TrendingUp, 
   BarChart3, 
   Shield, 
-  MessageSquare,
-  Settings,
   ArrowRight,
   CheckCircle2,
   Sparkles,
@@ -23,7 +21,7 @@ const Index = () => {
     {
       icon: Package,
       title: 'Gestão Completa',
-      description: 'Controle total do seu estoque com cadastro de produtos, categorias e fornecedores.',
+      description: 'Controle total do seu estoque com cadastro de produtos e categorias.',
       color: 'from-blue-500 to-cyan-500'
     },
     {
@@ -37,12 +35,6 @@ const Index = () => {
       title: 'Relatórios Avançados',
       description: 'Visualize estatísticas e gere relatórios em PDF com gráficos.',
       color: 'from-purple-500 to-indigo-500'
-    },
-    {
-      icon: MessageSquare,
-      title: 'Chat com Fornecedores',
-      description: 'Comunique-se diretamente com seus fornecedores pelo sistema.',
-      color: 'from-green-500 to-emerald-500'
     },
   ];
 
@@ -69,13 +61,13 @@ const Index = () => {
 
   const benefits = [
     'Cadastro ilimitado de produtos',
-    'Múltiplos usuários e fornecedores',
     'Gráficos interativos e visuais',
-    'Sistema de chat integrado',
-    'Modo escuro e claro',
     'Relatórios em PDF',
     'Histórico completo de movimentações',
-    'Interface moderna e responsiva'
+    'Interface moderna e responsiva',
+    'Controle total de estoque',
+    'Categorização personalizada',
+    'Exportação de dados'
   ];
 
   return (
@@ -98,7 +90,7 @@ const Index = () => {
           
           <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             Controle seu estoque de forma <span className="text-primary font-semibold">simples</span>, 
-            {' '}comunique-se com fornecedores e visualize relatórios em tempo real. 
+            {' '}visualize relatórios em tempo real e gerencie produtos com eficiência. 
             Tudo em uma única plataforma.
           </p>
           

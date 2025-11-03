@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Edit, Trash2, Package } from 'lucide-react';
+import { Plus, Edit, Trash2, Package, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const Products = () => {
@@ -57,6 +57,25 @@ const Products = () => {
     localStorage.setItem('productCategories', JSON.stringify(updated));
     setNewCategoryName('');
     toast({ title: 'Categoria adicionada!' });
+  };
+
+  const removeCategory = (categoryName: string) => {
+    const hasProducts = products.some(p => p.category === categoryName);
+    if (hasProducts) {
+      toast({ 
+        title: 'Não é possível remover!', 
+        description: 'Esta categoria possui produtos cadastrados.',
+        variant: 'destructive' 
+      });
+      return;
+    }
+    
+    if (confirm(`Deseja realmente excluir a categoria "${categoryName}"?`)) {
+      const updated = categories.filter(cat => cat !== categoryName);
+      setCategories(updated);
+      localStorage.setItem('productCategories', JSON.stringify(updated));
+      toast({ title: 'Categoria removida!' });
+    }
   };
 
   const resetForm = () => {
@@ -167,15 +186,29 @@ const Products = () => {
                     </div>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {categories.map((cat) => (
-                        <Button
-                          key={cat}
-                          type="button"
-                          variant={formData.category === cat ? 'default' : 'outline'}
-                          size="sm"
-                          onClick={() => setFormData({ ...formData, category: cat })}
-                        >
-                          {cat}
-                        </Button>
+                        <div key={cat} className="relative group">
+                          <Button
+                            type="button"
+                            variant={formData.category === cat ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setFormData({ ...formData, category: cat })}
+                            className="pr-8"
+                          >
+                            {cat}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeCategory(cat);
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
                       ))}
                     </div>
                   </div>

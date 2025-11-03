@@ -14,7 +14,6 @@ const Auth = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'user' | 'supplier'>('user');
   const [loading, setLoading] = useState(false);
   
   const { login, signup } = useAuth();
@@ -27,7 +26,7 @@ const Auth = () => {
 
     try {
       if (mode === 'signup') {
-        const success = await signup(name, email, password, role);
+        const success = await signup(name, email, password);
         if (success) {
           toast({ title: 'Conta criada com sucesso!' });
           const loginSuccess = await login(email, password);
@@ -62,31 +61,16 @@ const Auth = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'signup' && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="role">Tipo de Conta</Label>
-                  <select
-                    id="role"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    value={role}
-                    onChange={(e) => setRole(e.target.value as 'user' | 'supplier')}
-                  >
-                    <option value="user">Usuário</option>
-                    <option value="supplier">Fornecedor</option>
-                  </select>
-                </div>
-              </>
+              <div className="space-y-2">
+                <Label htmlFor="name">Nome da empresa</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
             )}
             
             <div className="space-y-2">

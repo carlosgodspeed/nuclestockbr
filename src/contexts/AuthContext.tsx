@@ -4,7 +4,7 @@ import { User } from '@/types';
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
-  signup: (name: string, email: string, password: string, role?: 'user' | 'supplier') => Promise<boolean>;
+  signup: (name: string, email: string, password: string) => Promise<boolean>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => void;
 }
@@ -21,7 +21,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const signup = async (name: string, email: string, password: string, role: 'user' | 'supplier' = 'user'): Promise<boolean> => {
+  const signup = async (name: string, email: string, password: string): Promise<boolean> => {
     const users = JSON.parse(localStorage.getItem('users') || '[]');
     
     if (users.find((u: any) => u.email === email)) {
@@ -32,7 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       id: crypto.randomUUID(),
       name,
       email,
-      role: users.length === 0 ? 'admin' : role,
+      role: users.length === 0 ? 'admin' : 'user',
       createdAt: new Date().toISOString(),
     };
 

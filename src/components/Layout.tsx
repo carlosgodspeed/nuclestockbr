@@ -1,9 +1,7 @@
 import { ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useChat } from '@/contexts/ChatContext';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { 
   LayoutDashboard, 
   Package, 
@@ -11,8 +9,7 @@ import {
   FileText, 
   Settings, 
   LogOut,
-  Menu,
-  MessageSquare
+  Menu
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -25,16 +22,12 @@ const Layout = ({ children }: LayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
-  const { conversations } = useChat();
-
-  const unreadCount = conversations.reduce((acc, conv) => acc + (conv.unreadCount || 0), 0);
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: Package, label: 'Produtos', path: '/products' },
     { icon: TrendingUp, label: 'Movimentações', path: '/movements' },
     { icon: FileText, label: 'Relatórios', path: '/reports' },
-    { icon: MessageSquare, label: 'Chat', path: '/chat' },
     { icon: Settings, label: 'Configurações', path: '/settings' },
   ];
 
@@ -64,22 +57,16 @@ const Layout = ({ children }: LayoutProps) => {
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
-          const isChat = item.path === '/chat';
           
           return (
             <Button
               key={item.path}
               variant={isActive ? 'secondary' : 'ghost'}
-              className="w-full justify-start mb-2 relative"
+              className="w-full justify-start mb-2"
               onClick={() => navigate(item.path)}
             >
               <Icon className="mr-2 h-4 w-4" />
               {item.label}
-              {isChat && unreadCount > 0 && (
-                <Badge className="ml-auto" variant="destructive">
-                  {unreadCount}
-                </Badge>
-              )}
             </Button>
           );
         })}
