@@ -32,7 +32,7 @@ const Movements = () => {
   });
 
   const categories = useMemo(() => {
-    const cats = new Set(products.map(p => p.category));
+    const cats = new Set(products.map(p => p.category).filter(cat => cat && cat.trim() !== ''));
     return ['all', ...Array.from(cats)];
   }, [products]);
 
