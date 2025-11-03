@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Package, TrendingUp, ShoppingCart, DollarSign, Search, Plus, X, BarChart3 } from 'lucide-react';
+import { Package, TrendingUp, ShoppingCart, DollarSign, Search, Plus, X, BarChart3, TrendingDown } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const Dashboard = () => {
@@ -20,8 +20,14 @@ const Dashboard = () => {
     const totalValue = products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
     const entriesValue = movements.filter(m => m.type === 'entry').reduce((sum, m) => sum + (m.quantity * (m.price || 0)), 0);
     const exitsQuantity = movements.filter(m => m.type === 'exit').reduce((sum, m) => sum + m.quantity, 0);
+    const estimatedProfit = products.reduce((sum, p) => {
+      if (p.cost && p.price && p.cost > 0 && p.price > 0) {
+        return sum + ((p.price - p.cost) * p.quantity);
+      }
+      return sum;
+    }, 0);
 
-    return { totalProducts, totalValue, entriesValue, exitsQuantity };
+    return { totalProducts, totalValue, entriesValue, exitsQuantity, estimatedProfit };
   }, [products, movements]);
 
   const categoryData = useMemo(() => {
@@ -67,7 +73,7 @@ const Dashboard = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/20">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">Total de Produtos</CardTitle>
@@ -118,6 +124,20 @@ const Dashboard = () => {
               <CardContent>
                 <p className="text-3xl font-bold text-yellow-500">
                   {stats.exitsQuantity} un.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent border-green-500/20">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Lucro Estimado</CardTitle>
+                <div className="p-2 bg-green-500/10 rounded-lg">
+                  <TrendingDown className="h-5 w-5 text-green-500" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-bold text-green-500">
+                  {stats.estimatedProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </p>
               </CardContent>
             </Card>

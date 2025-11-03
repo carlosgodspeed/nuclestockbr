@@ -64,8 +64,14 @@ const Reports = () => {
     const totalValue = filteredData.reduce((sum, p) => sum + (p.price * p.quantity), 0);
     const entriesValue = filteredMovements.filter(m => m.type === 'entry').reduce((sum, m) => sum + (m.quantity * (m.price || 0)), 0);
     const exitsQuantity = filteredMovements.filter(m => m.type === 'exit').reduce((sum, m) => sum + m.quantity, 0);
+    const estimatedProfit = filteredData.reduce((sum, p) => {
+      if (p.cost && p.price && p.cost > 0 && p.price > 0) {
+        return sum + ((p.price - p.cost) * p.quantity);
+      }
+      return sum;
+    }, 0);
 
-    return { totalValue, entriesValue, exitsQuantity };
+    return { totalValue, entriesValue, exitsQuantity, estimatedProfit };
   }, [filteredData, filteredMovements]);
 
   const categoryData = useMemo(() => {
@@ -125,6 +131,8 @@ const Reports = () => {
       pdf.text(`Valor de Entradas: ${stats.entriesValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, 14, yPosition);
       yPosition += 7;
       pdf.text(`Quantidade de Saídas: ${stats.exitsQuantity} unidades`, 14, yPosition);
+      yPosition += 7;
+      pdf.text(`Lucro Estimado: ${stats.estimatedProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, 14, yPosition);
       yPosition += 15;
 
       // Capturar gráfico de barras
@@ -184,13 +192,14 @@ const Reports = () => {
       // Cabeçalho da tabela
       pdf.setFillColor(59, 130, 246);
       pdf.rect(14, yPosition, pageWidth - 28, 8, 'F');
-      pdf.setFontSize(9);
+      pdf.setFontSize(8);
       pdf.setTextColor(255, 255, 255);
       pdf.text('Produto', 16, yPosition + 5);
-      pdf.text('Categoria', 70, yPosition + 5);
-      pdf.text('Qtd', 120, yPosition + 5);
-      pdf.text('Preço', 140, yPosition + 5);
-      pdf.text('Total', 170, yPosition + 5);
+      pdf.text('Categoria', 60, yPosition + 5);
+      pdf.text('Qtd', 100, yPosition + 5);
+      pdf.text('Preço', 120, yPosition + 5);
+      pdf.text('Total', 150, yPosition + 5);
+      pdf.text('Lucro Est.', 180, yPosition + 5);
       yPosition += 10;
 
       // Linhas da tabela
@@ -206,12 +215,23 @@ const Reports = () => {
           pdf.rect(14, yPosition - 2, pageWidth - 28, 7, 'F');
         }
 
+        const estimatedProfit = product.cost && product.price && product.cost > 0 && product.price > 0
+          ? (product.price - product.cost) * product.quantity
+          : null;
+
         pdf.setFontSize(8);
-        pdf.text(product.name.substring(0, 30), 16, yPosition + 3);
-        pdf.text(product.category.substring(0, 20), 70, yPosition + 3);
-        pdf.text(String(product.quantity), 120, yPosition + 3);
-        pdf.text(product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 140, yPosition + 3);
-        pdf.text((product.price * product.quantity).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 170, yPosition + 3);
+        pdf.text(product.name.substring(0, 25), 16, yPosition + 3);
+        pdf.text(product.category.substring(0, 15), 60, yPosition + 3);
+        pdf.text(String(product.quantity), 100, yPosition + 3);
+        pdf.text(product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 120, yPosition + 3);
+        pdf.text((product.price * product.quantity).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 150, yPosition + 3);
+        pdf.text(
+          estimatedProfit !== null 
+            ? estimatedProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+            : '—',
+          180,
+          yPosition + 3
+        );
         yPosition += 7;
       });
 
@@ -324,7 +344,7 @@ const Reports = () => {
         </Card>
 
         {/* Estatísticas */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-4">
           <Card className="bg-gradient-to-br from-secondary/10 via-secondary/5 to-transparent border-secondary/20">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Valor Total em Estoque</CardTitle>
@@ -363,6 +383,20 @@ const Reports = () => {
             <CardContent>
               <p className="text-3xl font-bold text-yellow-500">
                 {stats.exitsQuantity} un.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent border-green-500/20">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">Lucro Estimado</CardTitle>
+              <div className="p-2 bg-green-500/10 rounded-lg">
+                <TrendingUp className="h-5 w-5 text-green-500" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-green-500">
+                {stats.estimatedProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </p>
             </CardContent>
           </Card>
@@ -471,26 +505,44 @@ const Reports = () => {
                     <th className="text-left p-2">Produto</th>
                     <th className="text-left p-2">Categoria</th>
                     <th className="text-right p-2">Quantidade</th>
+                    <th className="text-right p-2">Custo</th>
                     <th className="text-right p-2">Preço</th>
                     <th className="text-right p-2">Valor Total</th>
+                    <th className="text-right p-2">Lucro Estimado</th>
                     <th className="text-left p-2">Fornecedor</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredData.map(product => (
-                    <tr key={product.id} className="border-b">
-                      <td className="p-2">{product.name}</td>
-                      <td className="p-2">{product.category}</td>
-                      <td className="text-right p-2">{product.quantity}</td>
-                      <td className="text-right p-2">
-                        {product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                      </td>
-                      <td className="text-right p-2">
-                        {(product.price * product.quantity).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                      </td>
-                      <td className="p-2">{product.supplier}</td>
-                    </tr>
-                  ))}
+                  {filteredData.map(product => {
+                    const estimatedProfit = product.cost && product.price && product.cost > 0 && product.price > 0
+                      ? (product.price - product.cost) * product.quantity
+                      : null;
+                    
+                    return (
+                      <tr key={product.id} className="border-b">
+                        <td className="p-2">{product.name}</td>
+                        <td className="p-2">{product.category}</td>
+                        <td className="text-right p-2">{product.quantity}</td>
+                        <td className="text-right p-2">
+                          {product.cost && product.cost > 0
+                            ? product.cost.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                            : '—'}
+                        </td>
+                        <td className="text-right p-2">
+                          {product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        </td>
+                        <td className="text-right p-2">
+                          {(product.price * product.quantity).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                        </td>
+                        <td className="text-right p-2">
+                          {estimatedProfit !== null
+                            ? estimatedProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                            : '—'}
+                        </td>
+                        <td className="p-2">{product.supplier}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

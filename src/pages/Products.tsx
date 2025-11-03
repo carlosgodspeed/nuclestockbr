@@ -28,6 +28,7 @@ const Products = () => {
     quantity: 0,
     category: '',
     price: 0,
+    cost: 0,
     supplier: '',
     imageUrl: '',
   });
@@ -85,6 +86,7 @@ const Products = () => {
       quantity: 0,
       category: '',
       price: 0,
+      cost: 0,
       supplier: '',
       imageUrl: '',
     });
@@ -115,6 +117,7 @@ const Products = () => {
         quantity: product.quantity,
         category: product.category,
         price: product.price,
+        cost: product.cost || 0,
         supplier: product.supplier,
         imageUrl: product.imageUrl || '',
       });
@@ -223,7 +226,7 @@ const Products = () => {
                   />
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="quantity">Quantidade *</Label>
                     <Input
@@ -237,7 +240,31 @@ const Products = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="price">Preço *</Label>
+                    <Label htmlFor="supplier">Fornecedor</Label>
+                    <Input
+                      id="supplier"
+                      value={formData.supplier}
+                      onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="cost">Custo de Compra</Label>
+                    <Input
+                      id="cost"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.cost}
+                      onChange={(e) => setFormData({ ...formData, cost: Number(e.target.value) })}
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="price">Preço de Venda *</Label>
                     <Input
                       id="price"
                       type="number"
@@ -246,15 +273,6 @@ const Products = () => {
                       value={formData.price}
                       onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
                       required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="supplier">Fornecedor</Label>
-                    <Input
-                      id="supplier"
-                      value={formData.supplier}
-                      onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
                     />
                   </div>
                 </div>
@@ -386,9 +404,25 @@ const ProductCard = ({ product, onEdit, onDelete }: {
           <span className="font-medium">{product.quantity} un.</span>
         </div>
         <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Custo:</span>
+          <span className="font-medium">
+            {product.cost && product.cost > 0
+              ? product.cost.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+              : '—'}
+          </span>
+        </div>
+        <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Preço:</span>
           <span className="font-medium">
             {product.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          </span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Lucro Est.:</span>
+          <span className="font-medium text-green-600">
+            {product.cost && product.price && product.cost > 0 && product.price > 0
+              ? ((product.price - product.cost) * product.quantity).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+              : '—'}
           </span>
         </div>
         {product.supplier && (
