@@ -154,7 +154,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               {topProducts.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={350}>
                   <BarChart data={topProducts}>
                     <defs>
                       <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
@@ -163,22 +163,42 @@ const Dashboard = () => {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                    <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" style={{ fontSize: '12px' }} />
-                    <YAxis stroke="hsl(var(--muted-foreground))" style={{ fontSize: '12px' }} />
+                    <XAxis 
+                      dataKey="name" 
+                      stroke="hsl(var(--foreground))" 
+                      style={{ fontSize: '13px', fontWeight: '500' }} 
+                    />
+                    <YAxis 
+                      stroke="hsl(var(--foreground))" 
+                      style={{ fontSize: '13px', fontWeight: '500' }}
+                      tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
+                    />
                     <Tooltip 
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--primary))',
+                        border: '2px solid hsl(var(--primary))',
                         borderRadius: '8px',
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                        fontSize: '14px',
+                        fontWeight: '600'
                       }}
-                      formatter={(value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      formatter={(value: number) => [value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 'Valor']}
+                      labelStyle={{ fontWeight: 'bold', marginBottom: '4px' }}
                     />
-                    <Bar dataKey="value" fill="url(#colorValue)" radius={[8, 8, 0, 0]} />
+                    <Bar 
+                      dataKey="value" 
+                      fill="url(#colorValue)" 
+                      radius={[8, 8, 0, 0]}
+                      label={{ 
+                        position: 'top', 
+                        formatter: (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+                        style: { fontSize: '12px', fontWeight: 'bold', fill: 'hsl(var(--foreground))' }
+                      }}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                <div className="h-[350px] flex items-center justify-center text-muted-foreground">
                   Nenhum produto cadastrado
                 </div>
               )}
@@ -194,19 +214,22 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               {categoryData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={350}>
                   <PieChart>
                     <Pie
                       data={categoryData}
                       cx="50%"
                       cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                      outerRadius={90}
-                      innerRadius={50}
+                      labelLine={true}
+                      label={({ name, value, percent }) => 
+                        `${name}: ${value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} (${(percent * 100).toFixed(1)}%)`
+                      }
+                      outerRadius={100}
+                      innerRadius={60}
                       fill="#8884d8"
                       dataKey="value"
-                      paddingAngle={3}
+                      paddingAngle={2}
+                      style={{ fontSize: '13px', fontWeight: '600' }}
                     >
                       {categoryData.map((_, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -215,16 +238,23 @@ const Dashboard = () => {
                     <Tooltip 
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--primary))',
+                        border: '2px solid hsl(var(--primary))',
                         borderRadius: '8px',
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                        fontSize: '14px',
+                        fontWeight: '600'
                       }}
-                      formatter={(value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      formatter={(value: number) => [value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 'Valor Total']}
+                      labelStyle={{ fontWeight: 'bold', marginBottom: '4px' }}
+                    />
+                    <Legend 
+                      wrapperStyle={{ fontSize: '13px', fontWeight: '500' }}
+                      formatter={(value) => value}
                     />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                <div className="h-[350px] flex items-center justify-center text-muted-foreground">
                   Nenhuma categoria disponível
                 </div>
               )}

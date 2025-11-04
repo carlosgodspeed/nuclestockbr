@@ -315,7 +315,7 @@ const Movements = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={350}>
                   <LineChart data={chartData}>
                     <defs>
                       <linearGradient id="pinkGradient" x1="0" y1="0" x2="0" y2="1">
@@ -328,14 +328,23 @@ const Movements = () => {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                    <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" />
-                    <YAxis stroke="hsl(var(--muted-foreground))" />
+                    <XAxis 
+                      dataKey="date" 
+                      stroke="hsl(var(--foreground))" 
+                      style={{ fontSize: '13px', fontWeight: '500' }}
+                    />
+                    <YAxis 
+                      stroke="hsl(var(--foreground))" 
+                      style={{ fontSize: '13px', fontWeight: '500' }}
+                    />
                     <Tooltip 
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
+                        border: '2px solid hsl(var(--primary))',
                         borderRadius: '8px',
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                        fontSize: '14px',
+                        fontWeight: '600'
                       }}
                       formatter={(value: number, name: string) => {
                         if (name === 'entradas') {
@@ -343,23 +352,38 @@ const Movements = () => {
                         }
                         return [`${value} un.`, 'Saídas (Quantidade)'];
                       }}
+                      labelStyle={{ fontWeight: 'bold', marginBottom: '4px' }}
                     />
-                    <Legend />
+                    <Legend 
+                      wrapperStyle={{ fontSize: '13px', fontWeight: '500' }}
+                    />
                     <Line 
                       type="monotone" 
                       dataKey="entradas" 
+                      name="Entradas (R$)"
                       stroke="rgb(236, 72, 153)" 
                       strokeWidth={3}
-                      dot={{ fill: 'rgb(236, 72, 153)', r: 4 }}
-                      activeDot={{ r: 6 }}
+                      dot={{ fill: 'rgb(236, 72, 153)', r: 5, strokeWidth: 2 }}
+                      activeDot={{ r: 7 }}
+                      label={{ 
+                        position: 'top',
+                        formatter: (value: number) => value > 0 ? `R$ ${(value / 1000).toFixed(1)}k` : '',
+                        style: { fontSize: '11px', fontWeight: 'bold', fill: 'rgb(236, 72, 153)' }
+                      }}
                     />
                     <Line 
                       type="monotone" 
                       dataKey="saídas" 
+                      name="Saídas (un.)"
                       stroke="rgb(234, 179, 8)" 
                       strokeWidth={3}
-                      dot={{ fill: 'rgb(234, 179, 8)', r: 4 }}
-                      activeDot={{ r: 6 }}
+                      dot={{ fill: 'rgb(234, 179, 8)', r: 5, strokeWidth: 2 }}
+                      activeDot={{ r: 7 }}
+                      label={{ 
+                        position: 'bottom',
+                        formatter: (value: number) => value > 0 ? `${value} un` : '',
+                        style: { fontSize: '11px', fontWeight: 'bold', fill: 'rgb(234, 179, 8)' }
+                      }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -374,7 +398,7 @@ const Movements = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={350}>
                   <BarChart data={categoryChartData}>
                     <defs>
                       <linearGradient id="pinkBar" x1="0" y1="0" x2="0" y2="1">
@@ -387,14 +411,23 @@ const Movements = () => {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                    <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" />
-                    <YAxis stroke="hsl(var(--muted-foreground))" />
+                    <XAxis 
+                      dataKey="name" 
+                      stroke="hsl(var(--foreground))" 
+                      style={{ fontSize: '13px', fontWeight: '500' }}
+                    />
+                    <YAxis 
+                      stroke="hsl(var(--foreground))" 
+                      style={{ fontSize: '13px', fontWeight: '500' }}
+                    />
                     <Tooltip 
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
+                        border: '2px solid hsl(var(--primary))',
                         borderRadius: '8px',
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                        fontSize: '14px',
+                        fontWeight: '600'
                       }}
                       formatter={(value: number, name: string) => {
                         if (name === 'entradas') {
@@ -402,10 +435,33 @@ const Movements = () => {
                         }
                         return [`${value} un.`, 'Saídas (Quantidade)'];
                       }}
+                      labelStyle={{ fontWeight: 'bold', marginBottom: '4px' }}
                     />
-                    <Legend />
-                    <Bar dataKey="entradas" fill="url(#pinkBar)" radius={[8, 8, 0, 0]} />
-                    <Bar dataKey="saídas" fill="url(#yellowBar)" radius={[8, 8, 0, 0]} />
+                    <Legend 
+                      wrapperStyle={{ fontSize: '13px', fontWeight: '500' }}
+                    />
+                    <Bar 
+                      dataKey="entradas" 
+                      name="Entradas (R$)"
+                      fill="url(#pinkBar)" 
+                      radius={[8, 8, 0, 0]}
+                      label={{ 
+                        position: 'top',
+                        formatter: (value: number) => value > 0 ? `R$ ${(value / 1000).toFixed(1)}k` : '',
+                        style: { fontSize: '11px', fontWeight: 'bold', fill: 'hsl(var(--foreground))' }
+                      }}
+                    />
+                    <Bar 
+                      dataKey="saídas" 
+                      name="Saídas (un.)"
+                      fill="url(#yellowBar)" 
+                      radius={[8, 8, 0, 0]}
+                      label={{ 
+                        position: 'top',
+                        formatter: (value: number) => value > 0 ? `${value} un` : '',
+                        style: { fontSize: '11px', fontWeight: 'bold', fill: 'hsl(var(--foreground))' }
+                      }}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
