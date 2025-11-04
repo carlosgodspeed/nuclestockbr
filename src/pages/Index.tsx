@@ -80,34 +80,34 @@ const Index = () => {
             Sistema Completo de Gestão
           </Badge>
           
-          <h1 className="text-5xl md:text-7xl font-bold mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6">
             <span className="bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-              Gestão de Estoque
+              NucleStockBR
             </span>
             <br />
-            <span className="text-foreground">Inteligente e Moderna</span>
+            <span className="text-foreground">Gestão de Estoque Inteligente</span>
           </h1>
           
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-4">
             Controle seu estoque de forma <span className="text-primary font-semibold">simples</span>, 
             {' '}visualize relatórios em tempo real e gerencie produtos com eficiência. 
             Tudo em uma única plataforma.
           </p>
           
-          <div className="flex gap-4 justify-center flex-wrap mt-8">
+          <div className="flex gap-4 justify-center flex-wrap mt-8 px-4">
             <Button 
               size="lg" 
-              className="text-lg px-8 py-6 hover-scale"
+              className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 hover-scale w-full sm:w-auto"
               onClick={() => navigate('/auth?mode=signup')}
             >
               Começar Agora
-              <ArrowRight className="ml-2 h-5 w-5" />
+              <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
           </div>
         </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto mb-20">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto mb-20 px-4">
           {features.map((feature, idx) => {
             const Icon = feature.icon;
             return (
@@ -116,14 +116,14 @@ const Index = () => {
                 className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border-2 hover:border-primary/50"
                 style={{ animationDelay: `${idx * 100}ms` }}
               >
-                <CardContent className="p-6">
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${feature.color} w-fit mb-4`}>
-                    <Icon className="h-8 w-8 text-white" />
+                <CardContent className="p-4 sm:p-6">
+                  <div className={`p-2 sm:p-3 rounded-xl bg-gradient-to-br ${feature.color} w-fit mb-3 sm:mb-4 mx-auto sm:mx-0`}>
+                    <Icon className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                   </div>
-                  <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
+                  <h3 className="text-lg sm:text-xl font-bold mb-2 group-hover:text-primary transition-colors text-center sm:text-left">
                     {feature.title}
                   </h3>
-                  <p className="text-muted-foreground">{feature.description}</p>
+                  <p className="text-sm sm:text-base text-muted-foreground text-center sm:text-left">{feature.description}</p>
                 </CardContent>
               </Card>
             );
@@ -131,17 +131,17 @@ const Index = () => {
         </div>
 
         {/* Visual Showcase */}
-        <div className="mb-20">
+        <div className="mb-20 px-4">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
               Veja o Sistema em Ação
             </h2>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-lg sm:text-xl text-muted-foreground px-4">
               Interface intuitiva e recursos poderosos ao seu alcance
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
             {showcaseImages.map((item, idx) => {
               const Icon = item.icon;
               return (
@@ -166,20 +166,20 @@ const Index = () => {
         </div>
 
         {/* Benefits Section */}
-        <div className="mb-20">
+        <div className="mb-20 px-4">
           <Card className="max-w-5xl mx-auto bg-gradient-to-br from-card to-primary/5 border-2">
-            <CardContent className="p-8 md:p-12">
-              <div className="grid md:grid-cols-2 gap-8">
+            <CardContent className="p-6 sm:p-8 md:p-12">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
                 <div>
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-3 rounded-xl bg-primary">
-                      <Shield className="h-8 w-8 text-primary-foreground" />
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 mb-6">
+                    <div className="p-3 rounded-xl bg-primary flex-shrink-0">
+                      <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-primary-foreground" />
                     </div>
-                    <h2 className="text-3xl font-bold">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-center sm:text-left">
                       Por que escolher nosso sistema?
                     </h2>
                   </div>
-                  <p className="text-muted-foreground text-lg mb-6">
+                  <p className="text-muted-foreground text-base sm:text-lg mb-6 text-center sm:text-left">
                     Desenvolvido para facilitar sua rotina de gestão de estoque com 
                     tecnologia moderna e interface intuitiva.
                   </p>
@@ -202,15 +202,15 @@ const Index = () => {
         </div>
 
         {/* How it Works */}
-        <div className="mb-20">
+        <div className="mb-20 px-4">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">Como Funciona</h2>
-            <p className="text-xl text-muted-foreground">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Como Funciona</h2>
+            <p className="text-lg sm:text-xl text-muted-foreground px-4">
               Comece em minutos, sem complicação
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto">
             {[
               {
                 step: '1',
@@ -254,23 +254,23 @@ const Index = () => {
         </div>
 
         {/* CTA Final */}
-        <div className="text-center">
+        <div className="text-center px-4">
           <Card className="max-w-3xl mx-auto bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-0">
-            <CardContent className="p-12">
-              <h2 className="text-4xl font-bold mb-4">
+            <CardContent className="p-6 sm:p-8 md:p-12">
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4">
                 Pronto para começar?
               </h2>
-              <p className="text-xl mb-8 text-primary-foreground/90">
+              <p className="text-base sm:text-lg md:text-xl mb-8 text-primary-foreground/90">
                 Junte-se a milhares de usuários que já otimizaram sua gestão de estoque
               </p>
               <Button 
                 size="lg" 
                 variant="secondary"
-                className="text-lg px-8 py-6"
+                className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 w-full sm:w-auto"
                 onClick={() => navigate('/auth?mode=signup')}
               >
                 Criar Conta Grátis
-                <ArrowRight className="ml-2 h-5 w-5" />
+                <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
             </CardContent>
           </Card>
@@ -280,7 +280,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="border-t mt-20">
         <div className="container mx-auto px-4 py-8 text-center text-muted-foreground">
-          <p>© 2024 Sistema de Gestão de Estoque. Todos os direitos reservados.</p>
+          <p className="text-sm sm:text-base">© 2024 NucleStockBR - Sistema de Gestão de Estoque. Todos os direitos reservados.</p>
         </div>
       </footer>
     </div>
