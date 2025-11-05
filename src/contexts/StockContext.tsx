@@ -1,17 +1,32 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Product, Movement, Note } from '@/types';
 import { useAuth } from './AuthContext';
+import { db, storage } from '@/lib/firebase';
+import { 
+  collection, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  doc, 
+  query, 
+  where, 
+  onSnapshot,
+  serverTimestamp,
+  Timestamp
+} from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 interface StockContextType {
   products: Product[];
   movements: Movement[];
   notes: Note[];
-  addProduct: (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updateProduct: (id: string, product: Partial<Product>) => void;
-  deleteProduct: (id: string) => void;
-  addMovement: (movement: Omit<Movement, 'id'>) => void;
-  addNote: (note: Omit<Note, 'id' | 'createdAt'>) => void;
-  deleteNote: (id: string) => void;
+  addProduct: (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateProduct: (id: string, product: Partial<Product>) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
+  addMovement: (movement: Omit<Movement, 'id'>) => Promise<void>;
+  addNote: (note: Omit<Note, 'id' | 'createdAt'>) => Promise<void>;
+  deleteNote: (id: string) => Promise<void>;
+  uploadProductImage: (file: File) => Promise<string>;
 }
 
 const StockContext = createContext<StockContextType | undefined>(undefined);
@@ -23,61 +38,101 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [notes, setNotes] = useState<Note[]>([]);
 
   useEffect(() => {
-    if (!user) return;
-    
-    const storedProducts = localStorage.getItem(`products_${user.id}`);
-    const storedMovements = localStorage.getItem(`movements_${user.id}`);
-    const storedNotes = localStorage.getItem(`notes_${user.id}`);
-    
-    if (storedProducts) setProducts(JSON.parse(storedProducts));
-    if (storedMovements) setMovements(JSON.parse(storedMovements));
-    if (storedNotes) setNotes(JSON.parse(storedNotes));
+    if (!user) {
+      setProducts([]);
+      setMovements([]);
+      setNotes([]);
+      return;
+    }
+
+    // Listen to products
+    const productsQuery = query(collection(db, 'products'), where('userId', '==', user.id));
+    const unsubscribeProducts = onSnapshot(productsQuery, (snapshot) => {
+      const productsData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : data.createdAt,
+          updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate().toISOString() : data.updatedAt,
+        } as Product;
+      });
+      setProducts(productsData);
+    });
+
+    // Listen to movements
+    const movementsQuery = query(collection(db, 'movements'), where('userId', '==', user.id));
+    const unsubscribeMovements = onSnapshot(movementsQuery, (snapshot) => {
+      const movementsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Movement[];
+      setMovements(movementsData);
+    });
+
+    // Listen to notes
+    const notesQuery = query(collection(db, 'notes'), where('userId', '==', user.id));
+    const unsubscribeNotes = onSnapshot(notesQuery, (snapshot) => {
+      const notesData = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate().toISOString() : data.createdAt,
+        } as Note;
+      });
+      setNotes(notesData);
+    });
+
+    return () => {
+      unsubscribeProducts();
+      unsubscribeMovements();
+      unsubscribeNotes();
+    };
   }, [user]);
 
-  const addProduct = (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const uploadProductImage = async (file: File): Promise<string> => {
+    if (!user) throw new Error('User not authenticated');
+    
+    const storageRef = ref(storage, `products/${user.id}/${Date.now()}_${file.name}`);
+    await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(storageRef);
+    return downloadURL;
+  };
+
+  const addProduct = async (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (!user) return;
     
-    const newProduct: Product = {
+    await addDoc(collection(db, 'products'), {
       ...product,
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    
-    const updated = [...products, newProduct];
-    setProducts(updated);
-    localStorage.setItem(`products_${user.id}`, JSON.stringify(updated));
+      userId: user.id,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
   };
 
-  const updateProduct = (id: string, productData: Partial<Product>) => {
+  const updateProduct = async (id: string, productData: Partial<Product>) => {
     if (!user) return;
     
-    const updated = products.map(p => 
-      p.id === id ? { ...p, ...productData, updatedAt: new Date().toISOString() } : p
-    );
-    setProducts(updated);
-    localStorage.setItem(`products_${user.id}`, JSON.stringify(updated));
+    await updateDoc(doc(db, 'products', id), {
+      ...productData,
+      updatedAt: serverTimestamp(),
+    });
   };
 
-  const deleteProduct = (id: string) => {
+  const deleteProduct = async (id: string) => {
     if (!user) return;
     
-    const updated = products.filter(p => p.id !== id);
-    setProducts(updated);
-    localStorage.setItem(`products_${user.id}`, JSON.stringify(updated));
+    await deleteDoc(doc(db, 'products', id));
   };
 
-  const addMovement = (movement: Omit<Movement, 'id'>) => {
+  const addMovement = async (movement: Omit<Movement, 'id'>) => {
     if (!user) return;
     
-    const newMovement: Movement = {
+    await addDoc(collection(db, 'movements'), {
       ...movement,
-      id: crypto.randomUUID(),
-    };
-    
-    const updated = [...movements, newMovement];
-    setMovements(updated);
-    localStorage.setItem(`movements_${user.id}`, JSON.stringify(updated));
+      userId: user.id,
+    });
 
     const product = products.find(p => p.id === movement.productId);
     if (product) {
@@ -85,30 +140,24 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         ? product.quantity + movement.quantity 
         : product.quantity - movement.quantity;
       
-      updateProduct(movement.productId, { quantity: Math.max(0, newQuantity) });
+      await updateProduct(movement.productId, { quantity: Math.max(0, newQuantity) });
     }
   };
 
-  const addNote = (note: Omit<Note, 'id' | 'createdAt'>) => {
+  const addNote = async (note: Omit<Note, 'id' | 'createdAt'>) => {
     if (!user) return;
     
-    const newNote: Note = {
+    await addDoc(collection(db, 'notes'), {
       ...note,
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-    };
-    
-    const updated = [...notes, newNote];
-    setNotes(updated);
-    localStorage.setItem(`notes_${user.id}`, JSON.stringify(updated));
+      userId: user.id,
+      createdAt: serverTimestamp(),
+    });
   };
 
-  const deleteNote = (id: string) => {
+  const deleteNote = async (id: string) => {
     if (!user) return;
     
-    const updated = notes.filter(n => n.id !== id);
-    setNotes(updated);
-    localStorage.setItem(`notes_${user.id}`, JSON.stringify(updated));
+    await deleteDoc(doc(db, 'notes', id));
   };
 
   return (
@@ -122,6 +171,7 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       addMovement,
       addNote,
       deleteNote,
+      uploadProductImage,
     }}>
       {children}
     </StockContext.Provider>

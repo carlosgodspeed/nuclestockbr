@@ -1,5 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/types';
+import { auth, db } from '@/lib/firebase';
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  updateProfile as updateFirebaseProfile
+} from 'firebase/auth';
+import { doc, setDoc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
 
 interface AuthContextType {
   user: User | null;
@@ -15,69 +24,82 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('currentUser');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+        if (userDoc.exists()) {
+          setUser({ id: firebaseUser.uid, ...userDoc.data() } as User);
+        }
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const signup = async (name: string, email: string, password: string): Promise<boolean> => {
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    
-    if (users.find((u: any) => u.email === email)) {
+    try {
+      // Check if it's the first user
+      const usersSnapshot = await getDocs(collection(db, 'users'));
+      const isFirstUser = usersSnapshot.empty;
+
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await updateFirebaseProfile(userCredential.user, { displayName: name });
+
+      const newUser: User = {
+        id: userCredential.user.uid,
+        name,
+        email,
+        role: isFirstUser ? 'admin' : 'user',
+        createdAt: new Date().toISOString(),
+      };
+
+      await setDoc(doc(db, 'users', userCredential.user.uid), newUser);
+      setUser(newUser);
+      
+      return true;
+    } catch (error: any) {
+      console.error('Signup error:', error);
       return false;
     }
-
-    const newUser: User = {
-      id: crypto.randomUUID(),
-      name,
-      email,
-      role: users.length === 0 ? 'admin' : 'user',
-      createdAt: new Date().toISOString(),
-    };
-
-    const passwords = JSON.parse(localStorage.getItem('passwords') || '{}');
-    passwords[email] = password;
-    
-    users.push(newUser);
-    localStorage.setItem('users', JSON.stringify(users));
-    localStorage.setItem('passwords', JSON.stringify(passwords));
-    
-    return true;
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const passwords = JSON.parse(localStorage.getItem('passwords') || '{}');
-    
-    const foundUser = users.find((u: User) => u.email === email);
-    
-    if (foundUser && passwords[email] === password) {
-      setUser(foundUser);
-      localStorage.setItem('currentUser', JSON.stringify(foundUser));
-      return true;
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+      
+      if (userDoc.exists()) {
+        setUser({ id: userCredential.user.uid, ...userDoc.data() } as User);
+        return true;
+      }
+      
+      return false;
+    } catch (error: any) {
+      console.error('Login error:', error);
+      return false;
     }
-    
-    return false;
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('currentUser');
+  const logout = async () => {
+    try {
+      await signOut(auth);
+      setUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
-  const updateProfile = (data: Partial<User>) => {
+  const updateProfile = async (data: Partial<User>) => {
     if (!user) return;
     
-    const updatedUser = { ...user, ...data };
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const index = users.findIndex((u: User) => u.id === user.id);
-    
-    if (index !== -1) {
-      users[index] = updatedUser;
-      localStorage.setItem('users', JSON.stringify(users));
+    try {
+      const updatedUser = { ...user, ...data };
+      await updateDoc(doc(db, 'users', user.id), data);
       setUser(updatedUser);
-      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+    } catch (error) {
+      console.error('Update profile error:', error);
     }
   };
 
