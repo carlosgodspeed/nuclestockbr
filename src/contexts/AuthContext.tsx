@@ -1,8 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/types';
-import { auth } from '@/lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
-import { authService } from '@/services/authService';
 
 interface AuthContextType {
   user: User | null;
@@ -18,49 +15,69 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        const user = await authService.getUserById(firebaseUser.uid);
-        setUser(user);
-      } else {
-        setUser(null);
-      }
-    });
-
-    return () => unsubscribe();
+    const storedUser = localStorage.getItem('currentUser');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
   }, []);
 
   const signup = async (name: string, email: string, password: string): Promise<boolean> => {
-    const result = await authService.signup(name, email, password);
-    if (result.success && result.user) {
-      setUser(result.user);
-      return true;
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    
+    if (users.find((u: any) => u.email === email)) {
+      return false;
     }
-    return false;
+
+    const newUser: User = {
+      id: crypto.randomUUID(),
+      name,
+      email,
+      role: users.length === 0 ? 'admin' : 'user',
+      createdAt: new Date().toISOString(),
+    };
+
+    const passwords = JSON.parse(localStorage.getItem('passwords') || '{}');
+    passwords[email] = password;
+    
+    users.push(newUser);
+    localStorage.setItem('users', JSON.stringify(users));
+    localStorage.setItem('passwords', JSON.stringify(passwords));
+    
+    return true;
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    const result = await authService.login(email, password);
-    if (result.success && result.user) {
-      setUser(result.user);
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const passwords = JSON.parse(localStorage.getItem('passwords') || '{}');
+    
+    const foundUser = users.find((u: User) => u.email === email);
+    
+    if (foundUser && passwords[email] === password) {
+      setUser(foundUser);
+      localStorage.setItem('currentUser', JSON.stringify(foundUser));
       return true;
     }
+    
     return false;
   };
 
-  const logout = async () => {
-    const result = await authService.logout();
-    if (result.success) {
-      setUser(null);
-    }
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('currentUser');
   };
 
-  const updateProfile = async (data: Partial<User>) => {
+  const updateProfile = (data: Partial<User>) => {
     if (!user) return;
     
-    const result = await authService.updateUserProfile(user.id, data);
-    if (result.success) {
-      setUser({ ...user, ...data });
+    const updatedUser = { ...user, ...data };
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const index = users.findIndex((u: User) => u.id === user.id);
+    
+    if (index !== -1) {
+      users[index] = updatedUser;
+      localStorage.setItem('users', JSON.stringify(users));
+      setUser(updatedUser);
+      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
     }
   };
 
