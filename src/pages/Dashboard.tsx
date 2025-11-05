@@ -73,7 +73,7 @@ const Dashboard = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-4 md:grid-cols-2">
             <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/20">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">Total de Produtos</CardTitle>
@@ -82,10 +82,26 @@ const Dashboard = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-primary">{stats.totalProducts}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-primary break-words">{stats.totalProducts}</p>
               </CardContent>
             </Card>
 
+            <Card className="bg-gradient-to-br from-yellow-500/10 via-yellow-500/5 to-transparent border-yellow-500/20">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Quantidade de Saídas</CardTitle>
+                <div className="p-2 bg-yellow-500/10 rounded-lg">
+                  <ShoppingCart className="h-5 w-5 text-yellow-500" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl sm:text-3xl font-bold text-yellow-500 break-words">
+                  {stats.exitsQuantity} un.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
             <Card className="bg-gradient-to-br from-secondary/10 via-secondary/5 to-transparent border-secondary/20">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">Valor Total</CardTitle>
@@ -94,7 +110,7 @@ const Dashboard = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-secondary">
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-secondary break-words">
                   {stats.totalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </p>
               </CardContent>
@@ -108,22 +124,8 @@ const Dashboard = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-pink-500">
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-pink-500 break-words">
                   {stats.entriesValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-yellow-500/10 via-yellow-500/5 to-transparent border-yellow-500/20">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Quantidade de Saídas</CardTitle>
-                <div className="p-2 bg-yellow-500/10 rounded-lg">
-                  <ShoppingCart className="h-5 w-5 text-yellow-500" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold text-yellow-500">
-                  {stats.exitsQuantity} un.
                 </p>
               </CardContent>
             </Card>
@@ -136,7 +138,7 @@ const Dashboard = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-green-500">
+                <p className="text-xl sm:text-2xl md:text-3xl font-bold text-green-500 break-words">
                   {stats.estimatedProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </p>
               </CardContent>
@@ -154,7 +156,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               {topProducts.length > 0 ? (
-                <ResponsiveContainer width="100%" height={350}>
+                <ResponsiveContainer width="100%" height={350} minWidth={300}>
                   <BarChart data={topProducts}>
                     <defs>
                       <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
@@ -214,7 +216,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               {categoryData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={350}>
+                <ResponsiveContainer width="100%" height={350} minWidth={300}>
                   <PieChart>
                     <Pie
                       data={categoryData}
