@@ -1,20 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Product, Movement, Note } from '@/types';
 import { useAuth } from './AuthContext';
-import { db, storage } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { 
   collection, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
   query, 
   where, 
   onSnapshot,
-  serverTimestamp,
   Timestamp
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { productService, movementService, noteService } from '@/services/productService';
 
 interface StockContextType {
   products: Product[];
@@ -94,45 +89,32 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const uploadProductImage = async (file: File): Promise<string> => {
     if (!user) throw new Error('User not authenticated');
     
-    const storageRef = ref(storage, `products/${user.id}/${Date.now()}_${file.name}`);
-    await uploadBytes(storageRef, file);
-    const downloadURL = await getDownloadURL(storageRef);
-    return downloadURL;
+    const result = await productService.uploadProductImage(user.id, file);
+    if (result.success && result.url) {
+      return result.url;
+    }
+    throw new Error(result.error || 'Erro ao fazer upload da imagem');
   };
 
   const addProduct = async (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
     if (!user) return;
-    
-    await addDoc(collection(db, 'products'), {
-      ...product,
-      userId: user.id,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
+    await productService.addProduct(user.id, product);
   };
 
   const updateProduct = async (id: string, productData: Partial<Product>) => {
     if (!user) return;
-    
-    await updateDoc(doc(db, 'products', id), {
-      ...productData,
-      updatedAt: serverTimestamp(),
-    });
+    await productService.updateProduct(id, productData);
   };
 
   const deleteProduct = async (id: string) => {
     if (!user) return;
-    
-    await deleteDoc(doc(db, 'products', id));
+    await productService.deleteProduct(id);
   };
 
   const addMovement = async (movement: Omit<Movement, 'id'>) => {
     if (!user) return;
     
-    await addDoc(collection(db, 'movements'), {
-      ...movement,
-      userId: user.id,
-    });
+    await movementService.addMovement(user.id, movement);
 
     const product = products.find(p => p.id === movement.productId);
     if (product) {
@@ -146,18 +128,12 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const addNote = async (note: Omit<Note, 'id' | 'createdAt'>) => {
     if (!user) return;
-    
-    await addDoc(collection(db, 'notes'), {
-      ...note,
-      userId: user.id,
-      createdAt: serverTimestamp(),
-    });
+    await noteService.addNote(user.id, note);
   };
 
   const deleteNote = async (id: string) => {
     if (!user) return;
-    
-    await deleteDoc(doc(db, 'notes', id));
+    await noteService.deleteNote(id);
   };
 
   return (

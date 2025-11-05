@@ -1,14 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@/types';
-import { auth, db } from '@/lib/firebase';
-import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  updateProfile as updateFirebaseProfile
-} from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
+import { auth } from '@/lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { authService } from '@/services/authService';
 
 interface AuthContextType {
   user: User | null;
@@ -26,10 +20,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-        if (userDoc.exists()) {
-          setUser({ id: firebaseUser.uid, ...userDoc.data() } as User);
-        }
+        const user = await authService.getUserById(firebaseUser.uid);
+        setUser(user);
       } else {
         setUser(null);
       }
@@ -39,67 +31,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signup = async (name: string, email: string, password: string): Promise<boolean> => {
-    try {
-      // Check if it's the first user
-      const usersSnapshot = await getDocs(collection(db, 'users'));
-      const isFirstUser = usersSnapshot.empty;
-
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      await updateFirebaseProfile(userCredential.user, { displayName: name });
-
-      const newUser: User = {
-        id: userCredential.user.uid,
-        name,
-        email,
-        role: isFirstUser ? 'admin' : 'user',
-        createdAt: new Date().toISOString(),
-      };
-
-      await setDoc(doc(db, 'users', userCredential.user.uid), newUser);
-      setUser(newUser);
-      
+    const result = await authService.signup(name, email, password);
+    if (result.success && result.user) {
+      setUser(result.user);
       return true;
-    } catch (error: any) {
-      console.error('Signup error:', error);
-      return false;
     }
+    return false;
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
-      
-      if (userDoc.exists()) {
-        setUser({ id: userCredential.user.uid, ...userDoc.data() } as User);
-        return true;
-      }
-      
-      return false;
-    } catch (error: any) {
-      console.error('Login error:', error);
-      return false;
+    const result = await authService.login(email, password);
+    if (result.success && result.user) {
+      setUser(result.user);
+      return true;
     }
+    return false;
   };
 
   const logout = async () => {
-    try {
-      await signOut(auth);
+    const result = await authService.logout();
+    if (result.success) {
       setUser(null);
-    } catch (error) {
-      console.error('Logout error:', error);
     }
   };
 
   const updateProfile = async (data: Partial<User>) => {
     if (!user) return;
     
-    try {
-      const updatedUser = { ...user, ...data };
-      await updateDoc(doc(db, 'users', user.id), data);
-      setUser(updatedUser);
-    } catch (error) {
-      console.error('Update profile error:', error);
+    const result = await authService.updateUserProfile(user.id, data);
+    if (result.success) {
+      setUser({ ...user, ...data });
     }
   };
 
