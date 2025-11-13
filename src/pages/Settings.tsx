@@ -4,12 +4,11 @@ import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Camera } from 'lucide-react';
+import { Camera, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const Settings = () => {
   const { user, updateProfile } = useAuth();
@@ -17,19 +16,42 @@ const Settings = () => {
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [imageUrl, setImageUrl] = useState(user?.imageUrl || '');
+  const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const newImageUrl = reader.result as string;
-        setImageUrl(newImageUrl);
-        // Atualiza imediatamente no perfil
-        updateProfile({ imageUrl: newImageUrl });
-      };
-      reader.readAsDataURL(file);
+    if (!file || !user) return;
+
+    try {
+      setUploading(true);
+      
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('product-images')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(filePath);
+
+      setImageUrl(publicUrl);
+      await updateProfile({ imageUrl: publicUrl });
+      
+      toast({ title: 'Foto atualizada com sucesso!' });
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast({ 
+        title: 'Erro ao fazer upload da foto', 
+        variant: 'destructive' 
+      });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -62,9 +84,19 @@ const Settings = () => {
                   type="button"
                   variant="outline"
                   onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
                 >
-                  <Camera className="mr-2 h-4 w-4" />
-                  Alterar Foto
+                  {uploading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      <Camera className="mr-2 h-4 w-4" />
+                      Alterar Foto
+                    </>
+                  )}
                 </Button>
                 <input
                   ref={fileInputRef}
@@ -107,10 +139,12 @@ const Settings = () => {
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <p><strong>Versão:</strong> 1.0.0</p>
-            <p><strong>Armazenamento:</strong> LocalStorage (Navegador)</p>
+            <p><strong>Backend:</strong> Lovable Cloud</p>
+            <p><strong>Banco de Dados:</strong> PostgreSQL</p>
+            <p><strong>Armazenamento:</strong> Cloud Storage</p>
             <p className="text-muted-foreground pt-4">
-              Os dados estão armazenados localmente no seu navegador. 
-              Para usar em múltiplos dispositivos, você pode migrar para Firebase no futuro.
+              Seus dados estão armazenados de forma segura na nuvem com backup automático. 
+              Acesse de qualquer dispositivo com suas credenciais.
             </p>
           </CardContent>
         </Card>
