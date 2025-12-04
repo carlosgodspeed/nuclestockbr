@@ -1,53 +1,40 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import {
-  Package,
-  TrendingUp,
-  BarChart3,
-  Shield,
+import { 
+  Package, 
+  TrendingUp, 
+  BarChart3, 
+  Shield, 
   ArrowRight,
   CheckCircle2,
   Sparkles,
   Users,
-  FileText,
+  FileText
 } from 'lucide-react';
 
 const Index = () => {
   const navigate = useNavigate();
-  const { login, signup } = useAuth();
-  const { toast } = useToast();
-
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
 
   const features = [
     {
       icon: Package,
-      title: 'Controle de Estoque',
-      description: 'Acompanhe níveis, categorias e movimentações em tempo real.',
-      color: 'from-primary to-primary/70',
+      title: 'Gestão Completa',
+      description: 'Controle total do seu estoque com cadastro de produtos e categorias.',
+      color: 'from-blue-500 to-cyan-500'
     },
     {
       icon: TrendingUp,
-      title: 'Movimentações Inteligentes',
-      description: 'Registre entradas e saídas com histórico completo e filtros.',
-      color: 'from-secondary to-secondary/70',
+      title: 'Movimentações',
+      description: 'Registre entradas e saídas de produtos com histórico detalhado.',
+      color: 'from-pink-500 to-rose-500'
     },
     {
       icon: BarChart3,
-      title: 'Relatórios Profissionais',
-      description: 'Gere PDFs claros para decisões rápidas e seguras.',
-      color: 'from-accent to-accent/70',
+      title: 'Relatórios Avançados',
+      description: 'Visualize estatísticas e gere relatórios em PDF com gráficos.',
+      color: 'from-purple-500 to-indigo-500'
     },
   ];
 
@@ -83,193 +70,51 @@ const Index = () => {
     'Exportação de dados'
   ];
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      if (mode === 'signup') {
-        const success = await signup(name, email, password);
-        if (success) {
-          toast({ title: 'Conta criada com sucesso!' });
-          const loginSuccess = await login(email, password);
-          if (loginSuccess) {
-            navigate('/dashboard');
-          }
-        } else {
-          toast({
-            title: 'Erro',
-            description: 'Email já cadastrado',
-            variant: 'destructive',
-          });
-        }
-      } else {
-        const success = await login(email, password);
-        if (success) {
-          navigate('/dashboard');
-        } else {
-          toast({
-            title: 'Erro',
-            description: 'Email ou senha incorretos',
-            variant: 'destructive',
-          });
-        }
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-background">
+    <div className="min-h-screen bg-gradient-to-b from-background via-primary/5 to-background">
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-12 md:py-24">
-        <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-          <div className="space-y-6 animate-fade-in">
-            <Badge className="mb-2 inline-flex items-center px-4 py-1.5" variant="secondary">
-              <Sparkles className="mr-2 h-3 w-3" />
-              Sistema completo de gestão de estoque
-            </Badge>
-
-            <h1 className="text-4xl font-bold sm:text-5xl md:text-6xl">
-              <span className="bg-gradient-to-r from-primary via-primary/80 to-secondary bg-clip-text text-transparent">
-                Nuclestock
-              </span>
-              <br />
-              <span className="text-foreground">Gestão de estoque inteligente</span>
-            </h1>
-
-            <p className="max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-              Centralize o controle de produtos, movimentações e relatórios em uma única
-              plataforma, pensada para pequenos e médios negócios.
-            </p>
-
-            <div className="flex flex-wrap gap-4">
-              <Button
-                size="lg"
-                className="w-full rounded-full px-8 py-5 text-base sm:w-auto hover:shadow-lg hover:shadow-primary/30"
-                onClick={() => setMode('signup')}
-              >
-                Criar conta grátis
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="w-full rounded-full px-8 py-5 text-base sm:w-auto border-primary/40 bg-background/60 hover:bg-card hover:text-primary"
-                onClick={() => setMode('login')}
-              >
-                Já uso o Nuclestock
-              </Button>
-            </div>
-
-            <div className="mt-6 grid gap-4 sm:grid-cols-3">
-              {features.map((feature) => {
-                const Icon = feature.icon;
-                return (
-                  <Card
-                    key={feature.title}
-                    className="border-border/60 bg-card/80 backdrop-blur hover:-translate-y-1 hover:shadow-xl hover:shadow-black/40 transition-all duration-300"
-                  >
-                    <CardContent className="flex flex-col gap-3 p-4">
-                      <div
-                        className={`mx-0 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${feature.color}`}
-                      >
-                        <Icon className="h-5 w-5 text-primary-foreground" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold">{feature.title}</p>
-                        <p className="text-xs text-muted-foreground">{feature.description}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+        <div className="text-center mb-16 space-y-6 animate-fade-in">
+          <Badge className="mb-4 px-4 py-1.5" variant="secondary">
+            <Sparkles className="h-3 w-3 mr-2" />
+            Sistema Completo de Gestão
+          </Badge>
+          
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6">
+            <span className="bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+              NucleStockBR
+            </span>
+            <br />
+            <span className="text-foreground">Gestão de Estoque Inteligente</span>
+          </h1>
+          
+          <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-4">
+            Controle seu estoque de forma <span className="text-primary font-semibold">simples</span>, 
+            {' '}visualize relatórios em tempo real e gerencie produtos com eficiência. 
+            Tudo em uma única plataforma.
+          </p>
+          
+          <div className="flex gap-4 justify-center flex-wrap mt-8 px-4">
+            <Button 
+              size="lg" 
+              className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 hover-scale w-full sm:w-auto"
+              onClick={() => navigate('/auth?mode=signup')}
+            >
+              Começar Agora
+              <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline"
+              className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 hover-scale w-full sm:w-auto"
+              onClick={() => navigate('/auth?mode=login')}
+            >
+              Já tem conta? Entrar
+            </Button>
           </div>
-
-          <Card className="relative w-full max-w-md justify-self-center border-border/70 bg-gradient-to-br from-card to-background/60 shadow-xl shadow-black/40">
-            <CardHeader>
-              <CardTitle className="text-2xl font-semibold">
-                {mode === 'login' ? 'Acesse sua conta' : 'Crie sua conta'}
-              </CardTitle>
-              <CardDescription>
-                {mode === 'login'
-                  ? 'Entre para acompanhar seu estoque em tempo real.'
-                  : 'Leva menos de 1 minuto para começar a controlar seu estoque.'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {mode === 'signup' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Nome da empresa</Label>
-                    <Input
-                      id="name"
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                    />
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password">Senha</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={6}
-                  />
-                </div>
-
-                <Button type="submit" className="w-full rounded-full" disabled={loading}>
-                  {loading ? 'Carregando...' : mode === 'login' ? 'Entrar' : 'Criar conta'}
-                </Button>
-              </form>
-
-              <div className="mt-4 text-center text-xs text-muted-foreground">
-                {mode === 'login' ? (
-                  <p>
-                    Não tem conta?{' '}
-                    <button
-                      type="button"
-                      onClick={() => setMode('signup')}
-                      className="font-medium text-primary hover:underline"
-                    >
-                      Cadastre-se
-                    </button>
-                  </p>
-                ) : (
-                  <p>
-                    Já tem conta?{' '}
-                    <button
-                      type="button"
-                      onClick={() => setMode('login')}
-                      className="font-medium text-primary hover:underline"
-                    >
-                      Entrar
-                    </button>
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
         </div>
+
+        {/* Features Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto mb-20 px-4">
           {features.map((feature, idx) => {
             const Icon = feature.icon;
