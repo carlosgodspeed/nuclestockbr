@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStock } from '@/contexts/StockContext';
 import { useAuth } from '@/contexts/AuthContext';
 import Layout from '@/components/Layout';
@@ -6,12 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Package, TrendingUp, ShoppingCart, DollarSign, Search, Plus, X, BarChart3, TrendingDown } from 'lucide-react';
+import { Package, TrendingUp, ShoppingCart, DollarSign, Search, Plus, X, BarChart3, TrendingDown, ArrowDownCircle, ArrowUpCircle, FileText, SlidersHorizontal } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const Dashboard = () => {
   const { products, movements, notes, addNote, deleteNote } = useStock();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [newNote, setNewNote] = useState('');
 
@@ -67,10 +69,95 @@ const Dashboard = () => {
   return (
     <Layout>
       <div className="space-y-6">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground">Visão geral do seu estoque</p>
+            <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground">
+              Visão geral do seu estoque{user?.company ? ` • ${user.company}` : ''}
+            </p>
           </div>
+          <div className="flex items-center gap-3">
+            <div className="hidden text-right text-xs text-muted-foreground sm:block">
+              <p className="font-medium">Usuário</p>
+              <p className="max-w-[180px] truncate text-foreground/90">{user?.name}</p>
+            </div>
+          </div>
+        </div>
+
+        <section
+          aria-label="Atalhos rápidos"
+          className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5"
+        >
+          <Button
+            variant="outline"
+            className="flex items-center justify-start gap-3 rounded-2xl border-border/80 bg-card/80 px-4 py-3 text-sm hover:bg-card hover:shadow-lg hover:shadow-primary/15"
+            onClick={() => navigate('/products')}
+          >
+            <Package className="h-5 w-5 text-primary" />
+            <div className="flex flex-col items-start">
+              <span className="font-medium">Adicionar produto</span>
+              <span className="text-xs text-muted-foreground">
+                Cadastre novos itens no estoque
+              </span>
+            </div>
+          </Button>
+
+          <Button
+            variant="outline"
+            className="flex items-center justify-start gap-3 rounded-2xl border-border/80 bg-card/80 px-4 py-3 text-sm hover:bg-card hover:shadow-lg hover:shadow-primary/15"
+            onClick={() => navigate('/movements')}
+          >
+            <ArrowDownCircle className="h-5 w-5 text-success" />
+            <div className="flex flex-col items-start">
+              <span className="font-medium">Registrar entrada</span>
+              <span className="text-xs text-muted-foreground">
+                Lançar novas entradas de produtos
+              </span>
+            </div>
+          </Button>
+
+          <Button
+            variant="outline"
+            className="flex items-center justify-start gap-3 rounded-2xl border-border/80 bg-card/80 px-4 py-3 text-sm hover:bg-card hover:shadow-lg hover:shadow-primary/15"
+            onClick={() => navigate('/movements')}
+          >
+            <ArrowUpCircle className="h-5 w-5 text-destructive" />
+            <div className="flex flex-col items-start">
+              <span className="font-medium">Registrar saída</span>
+              <span className="text-xs text-muted-foreground">
+                Controle as saídas do estoque
+              </span>
+            </div>
+          </Button>
+
+          <Button
+            variant="outline"
+            className="flex items-center justify-start gap-3 rounded-2xl border-border/80 bg-card/80 px-4 py-3 text-sm hover:bg-card hover:shadow-lg hover:shadow-primary/15"
+            onClick={() => navigate('/reports')}
+          >
+            <FileText className="h-5 w-5 text-accent" />
+            <div className="flex flex-col items-start">
+              <span className="font-medium">Gerar relatório</span>
+              <span className="text-xs text-muted-foreground">
+                Visualize PDFs profissionais
+              </span>
+            </div>
+          </Button>
+
+          <Button
+            variant="outline"
+            className="flex items-center justify-start gap-3 rounded-2xl border-border/80 bg-card/80 px-4 py-3 text-sm hover:bg-card hover:shadow-lg hover:shadow-primary/15"
+            onClick={() => navigate('/movements')}
+          >
+            <SlidersHorizontal className="h-5 w-5 text-secondary" />
+            <div className="flex flex-col items-start">
+              <span className="font-medium">Filtros avançados</span>
+              <span className="text-xs text-muted-foreground">
+                Explore movimentações por período
+              </span>
+            </div>
+          </Button>
+        </section>
 
           {/* Stats Cards */}
           <div className="grid gap-4 md:grid-cols-2">
