@@ -2,14 +2,15 @@ import { ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { 
-  LayoutDashboard, 
-  Package, 
-  TrendingUp, 
-  FileText, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Package,
+  TrendingUp,
+  FileText,
+  Settings,
   LogOut,
-  Menu
+  Menu,
+  Bell,
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -82,29 +83,51 @@ const Layout = ({ children }: LayoutProps) => {
   );
 
   return (
-    <div className="flex h-screen bg-background">
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-64 border-r flex-col">
-        <NavContent />
-      </aside>
+    <div className="flex min-h-screen bg-gradient-to-br from-background via-background/95 to-background">
+      <header className="fixed inset-x-0 top-0 z-40 border-b bg-background/80 backdrop-blur">
+        <div className="container mx-auto flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-3">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="rounded-full border-border/70 bg-card/70 hover:bg-card hover:shadow-lg hover:shadow-primary/20"
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="p-0 w-72 sm:w-80">
+                <NavContent />
+              </SheetContent>
+            </Sheet>
+            <div className="flex flex-col">
+              <span className="text-xs font-semibold tracking-[0.25em] text-primary/80 uppercase">
+                Nuclestock
+              </span>
+              <span className="text-sm font-medium text-muted-foreground">
+                Gestão de estoque inteligente
+              </span>
+            </div>
+          </div>
 
-      {/* Mobile Menu */}
-      <div className="md:hidden fixed top-4 left-4 z-50">
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="icon">
-              <Menu className="h-4 w-4" />
+          <div className="flex items-center gap-3">
+            <span className="hidden sm:inline text-sm text-muted-foreground">
+              Olá, {user?.name}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full border border-border/70 bg-card/60 hover:bg-card hover:shadow-lg hover:shadow-primary/20"
+            >
+              <Bell className="h-5 w-5" />
             </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-64">
-            <NavContent />
-          </SheetContent>
-        </Sheet>
-      </div>
+          </div>
+        </div>
+      </header>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        <div className="container mx-auto p-6 md:p-8">
+      <main className="flex-1 overflow-auto pt-20">
+        <div className="container mx-auto px-4 py-6 md:px-8 md:py-8">
           {children}
         </div>
       </main>
