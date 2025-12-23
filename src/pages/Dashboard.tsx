@@ -156,8 +156,8 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               {topProducts.length > 0 ? (
-                <ResponsiveContainer width="100%" height={350} minWidth={300}>
-                  <BarChart data={topProducts}>
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={topProducts} margin={{ top: 40, right: 20, left: 20, bottom: 20 }}>
                     <defs>
                       <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.9}/>
@@ -167,35 +167,42 @@ const Dashboard = () => {
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
                     <XAxis 
                       dataKey="name" 
-                      stroke="hsl(var(--foreground))" 
-                      style={{ fontSize: '13px', fontWeight: '500' }} 
+                      stroke="hsl(var(--muted-foreground))" 
+                      tick={{ fontSize: 11 }}
+                      tickLine={false}
+                      axisLine={false}
+                      interval={0}
+                      angle={-15}
+                      textAnchor="end"
+                      height={60}
                     />
                     <YAxis 
-                      stroke="hsl(var(--foreground))" 
-                      style={{ fontSize: '13px', fontWeight: '500' }}
-                      tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
+                      stroke="hsl(var(--muted-foreground))" 
+                      tick={{ fontSize: 11 }}
+                      tickLine={false}
+                      axisLine={false}
+                      width={70}
+                      tickFormatter={(value) => {
+                        if (value >= 1000000) return `R$ ${(value / 1000000).toFixed(1)}M`;
+                        if (value >= 1000) return `R$ ${(value / 1000).toFixed(0)}k`;
+                        return `R$ ${value}`;
+                      }}
                     />
                     <Tooltip 
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--card))',
-                        border: '2px solid hsl(var(--primary))',
+                        border: '1px solid hsl(var(--border))',
                         borderRadius: '8px',
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-                        fontSize: '14px',
-                        fontWeight: '600'
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                        fontSize: '13px'
                       }}
                       formatter={(value: number) => [value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 'Valor']}
-                      labelStyle={{ fontWeight: 'bold', marginBottom: '4px' }}
                     />
                     <Bar 
                       dataKey="value" 
                       fill="url(#colorValue)" 
-                      radius={[8, 8, 0, 0]}
-                      label={{ 
-                        position: 'top', 
-                        formatter: (value: number) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
-                        style: { fontSize: '12px', fontWeight: 'bold', fill: 'hsl(var(--foreground))' }
-                      }}
+                      radius={[6, 6, 0, 0]}
+                      maxBarSize={60}
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -216,22 +223,19 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               {categoryData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={350} minWidth={300}>
-                  <PieChart>
+                <ResponsiveContainer width="100%" height={350}>
+                  <PieChart margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
                     <Pie
                       data={categoryData}
                       cx="50%"
-                      cy="50%"
-                      labelLine={true}
-                      label={({ name, value, percent }) => 
-                        `${name}: ${value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} (${(percent * 100).toFixed(1)}%)`
-                      }
-                      outerRadius={100}
-                      innerRadius={60}
+                      cy="45%"
+                      labelLine={false}
+                      label={false}
+                      outerRadius={90}
+                      innerRadius={50}
                       fill="#8884d8"
                       dataKey="value"
-                      paddingAngle={2}
-                      style={{ fontSize: '13px', fontWeight: '600' }}
+                      paddingAngle={3}
                     >
                       {categoryData.map((_, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -240,18 +244,28 @@ const Dashboard = () => {
                     <Tooltip 
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--card))',
-                        border: '2px solid hsl(var(--primary))',
+                        border: '1px solid hsl(var(--border))',
                         borderRadius: '8px',
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-                        fontSize: '14px',
-                        fontWeight: '600'
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                        fontSize: '13px'
                       }}
-                      formatter={(value: number) => [value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 'Valor Total']}
-                      labelStyle={{ fontWeight: 'bold', marginBottom: '4px' }}
+                      formatter={(value: number, name: string) => [
+                        value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 
+                        name
+                      ]}
                     />
                     <Legend 
-                      wrapperStyle={{ fontSize: '13px', fontWeight: '500' }}
-                      formatter={(value) => value}
+                      layout="horizontal"
+                      verticalAlign="bottom"
+                      align="center"
+                      wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
+                      formatter={(value, entry: any) => {
+                        const item = categoryData.find(c => c.name === value);
+                        if (item) {
+                          return `${value}: ${item.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+                        }
+                        return value;
+                      }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
