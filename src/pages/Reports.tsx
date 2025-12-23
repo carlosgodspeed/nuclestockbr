@@ -432,35 +432,38 @@ const Reports = () => {
             <CardContent>
               <div ref={barChartRef}>
               {stockLevelData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={380} minWidth={300}>
-                  <BarChart data={stockLevelData} layout="vertical">
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={stockLevelData} layout="vertical" margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
                     <defs>
-                      <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                      <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
                         <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.9}/>
-                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
+                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.5}/>
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} horizontal={false} />
                     <XAxis 
                       type="number" 
-                      stroke="hsl(var(--foreground))" 
-                      style={{ fontSize: '13px', fontWeight: '500' }}
+                      stroke="hsl(var(--muted-foreground))" 
+                      tick={{ fontSize: 10 }}
+                      tickLine={false}
+                      axisLine={false}
                     />
                     <YAxis 
                       dataKey="name" 
                       type="category" 
-                      width={150} 
-                      stroke="hsl(var(--foreground))" 
-                      style={{ fontSize: '13px', fontWeight: '500' }}
+                      width={120} 
+                      stroke="hsl(var(--muted-foreground))" 
+                      tick={{ fontSize: 11 }}
+                      tickLine={false}
+                      axisLine={false}
                     />
                     <Tooltip 
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--card))',
-                        border: '2px solid hsl(var(--primary))',
+                        border: '1px solid hsl(var(--border))',
                         borderRadius: '8px',
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-                        fontSize: '14px',
-                        fontWeight: '600'
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                        fontSize: '13px'
                       }}
                       formatter={(value: number, name: string) => {
                         if (name === 'quantidade') {
@@ -468,22 +471,17 @@ const Reports = () => {
                         }
                         return [value, name];
                       }}
-                      labelStyle={{ fontWeight: 'bold', marginBottom: '4px' }}
                     />
                     <Bar 
                       dataKey="quantidade" 
                       fill="url(#barGradient)" 
-                      radius={[0, 8, 8, 0]}
-                      label={{ 
-                        position: 'right',
-                        formatter: (value: number) => `${value} un`,
-                        style: { fontSize: '12px', fontWeight: 'bold', fill: 'hsl(var(--foreground))' }
-                      }}
+                      radius={[0, 6, 6, 0]}
+                      maxBarSize={30}
                     />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-[380px] flex items-center justify-center text-muted-foreground">
+                <div className="h-[350px] flex items-center justify-center text-muted-foreground">
                   Nenhum dado disponível
                 </div>
               )}
@@ -501,22 +499,19 @@ const Reports = () => {
             <CardContent>
               <div ref={pieChartRef}>
               {categoryData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={380} minWidth={300}>
-                  <PieChart>
+                <ResponsiveContainer width="100%" height={350}>
+                  <PieChart margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
                     <Pie
                       data={categoryData}
                       cx="50%"
-                      cy="50%"
-                      labelLine={true}
-                      label={({ name, value, percent }) => 
-                        `${name}: ${value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} (${(percent * 100).toFixed(1)}%)`
-                      }
-                      outerRadius={110}
-                      innerRadius={60}
+                      cy="45%"
+                      labelLine={false}
+                      label={false}
+                      outerRadius={85}
+                      innerRadius={45}
                       fill="#8884d8"
                       dataKey="value"
-                      paddingAngle={2}
-                      style={{ fontSize: '13px', fontWeight: '600' }}
+                      paddingAngle={3}
                     >
                       {categoryData.map((_, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -525,22 +520,33 @@ const Reports = () => {
                     <Tooltip 
                       contentStyle={{ 
                         backgroundColor: 'hsl(var(--card))',
-                        border: '2px solid hsl(var(--primary))',
+                        border: '1px solid hsl(var(--border))',
                         borderRadius: '8px',
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-                        fontSize: '14px',
-                        fontWeight: '600'
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                        fontSize: '13px'
                       }}
-                      formatter={(value: number) => [value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 'Valor Total']}
-                      labelStyle={{ fontWeight: 'bold', marginBottom: '4px' }}
+                      formatter={(value: number, name: string) => [
+                        value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 
+                        name
+                      ]}
                     />
                     <Legend 
-                      wrapperStyle={{ fontSize: '13px', fontWeight: '500' }}
+                      layout="horizontal"
+                      verticalAlign="bottom"
+                      align="center"
+                      wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }}
+                      formatter={(value) => {
+                        const item = categoryData.find(c => c.name === value);
+                        if (item) {
+                          return `${value}: ${item.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
+                        }
+                        return value;
+                      }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-[380px] flex items-center justify-center text-muted-foreground">
+                <div className="h-[350px] flex items-center justify-center text-muted-foreground">
                   Nenhuma categoria disponível
                 </div>
               )}
