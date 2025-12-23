@@ -156,37 +156,35 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               {topProducts.length > 0 ? (
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={topProducts} margin={{ top: 40, right: 20, left: 20, bottom: 20 }}>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={topProducts} layout="vertical" margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
                     <defs>
-                      <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                      <linearGradient id="colorValue" x1="0" y1="0" x2="1" y2="0">
                         <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.9}/>
-                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
+                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.5}/>
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} horizontal={false} />
                     <XAxis 
-                      dataKey="name" 
+                      type="number"
                       stroke="hsl(var(--muted-foreground))" 
-                      tick={{ fontSize: 11 }}
+                      tick={{ fontSize: 10 }}
                       tickLine={false}
                       axisLine={false}
-                      interval={0}
-                      angle={-15}
-                      textAnchor="end"
-                      height={60}
+                      tickFormatter={(value) => {
+                        if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+                        if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
+                        return `${value}`;
+                      }}
                     />
                     <YAxis 
+                      dataKey="name"
+                      type="category"
                       stroke="hsl(var(--muted-foreground))" 
                       tick={{ fontSize: 11 }}
                       tickLine={false}
                       axisLine={false}
-                      width={70}
-                      tickFormatter={(value) => {
-                        if (value >= 1000000) return `R$ ${(value / 1000000).toFixed(1)}M`;
-                        if (value >= 1000) return `R$ ${(value / 1000).toFixed(0)}k`;
-                        return `R$ ${value}`;
-                      }}
+                      width={100}
                     />
                     <Tooltip 
                       contentStyle={{ 
@@ -201,13 +199,13 @@ const Dashboard = () => {
                     <Bar 
                       dataKey="value" 
                       fill="url(#colorValue)" 
-                      radius={[6, 6, 0, 0]}
-                      maxBarSize={60}
+                      radius={[0, 6, 6, 0]}
+                      maxBarSize={35}
                     />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-[350px] flex items-center justify-center text-muted-foreground">
+                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
                   Nenhum produto cadastrado
                 </div>
               )}
@@ -223,16 +221,16 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               {categoryData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={350}>
-                  <PieChart margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
                     <Pie
                       data={categoryData}
                       cx="50%"
                       cy="45%"
                       labelLine={false}
                       label={false}
-                      outerRadius={90}
-                      innerRadius={50}
+                      outerRadius={75}
+                      innerRadius={40}
                       fill="#8884d8"
                       dataKey="value"
                       paddingAngle={3}
@@ -258,8 +256,8 @@ const Dashboard = () => {
                       layout="horizontal"
                       verticalAlign="bottom"
                       align="center"
-                      wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
-                      formatter={(value, entry: any) => {
+                      wrapperStyle={{ fontSize: '11px', paddingTop: '5px' }}
+                      formatter={(value) => {
                         const item = categoryData.find(c => c.name === value);
                         if (item) {
                           return `${value}: ${item.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
@@ -270,7 +268,7 @@ const Dashboard = () => {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-[350px] flex items-center justify-center text-muted-foreground">
+                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
                   Nenhuma categoria disponível
                 </div>
               )}
