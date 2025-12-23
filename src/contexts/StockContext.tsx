@@ -211,7 +211,7 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!user) return;
 
     try {
-      const { error } = await supabase.from('products').insert({
+      const { data, error } = await supabase.from('products').insert({
         user_id: user.id,
         name: product.name,
         description: product.description,
@@ -221,9 +221,27 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         cost: product.cost,
         supplier: product.supplier,
         image_url: product.imageUrl,
-      });
+      }).select().single();
 
       if (error) throw error;
+
+      // Atualiza o estado local imediatamente
+      if (data) {
+        const newProduct: Product = {
+          id: data.id,
+          name: data.name,
+          description: data.description || '',
+          quantity: data.quantity,
+          category: data.category,
+          price: Number(data.price),
+          cost: data.cost ? Number(data.cost) : undefined,
+          supplier: data.supplier || '',
+          imageUrl: data.image_url,
+          createdAt: data.created_at,
+          updatedAt: data.updated_at,
+        };
+        setProducts(prev => [newProduct, ...prev]);
+      }
     } catch (error) {
       console.error('Error adding product:', error);
       throw error;
@@ -244,13 +262,32 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (productData.supplier !== undefined) updateData.supplier = productData.supplier;
       if (productData.imageUrl !== undefined) updateData.image_url = productData.imageUrl;
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('products')
         .update(updateData)
         .eq('id', id)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Atualiza o estado local imediatamente
+      if (data) {
+        setProducts(prev => prev.map(p => p.id === id ? {
+          id: data.id,
+          name: data.name,
+          description: data.description || '',
+          quantity: data.quantity,
+          category: data.category,
+          price: Number(data.price),
+          cost: data.cost ? Number(data.cost) : undefined,
+          supplier: data.supplier || '',
+          imageUrl: data.image_url,
+          createdAt: data.created_at,
+          updatedAt: data.updated_at,
+        } : p));
+      }
     } catch (error) {
       console.error('Error updating product:', error);
       throw error;
@@ -268,6 +305,9 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         .eq('user_id', user.id);
 
       if (error) throw error;
+
+      // Atualiza o estado local imediatamente
+      setProducts(prev => prev.filter(p => p.id !== id));
     } catch (error) {
       console.error('Error deleting product:', error);
       throw error;
@@ -279,7 +319,7 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     try {
       // Insert movement
-      const { error: movementError } = await supabase.from('movements').insert({
+      const { data, error: movementError } = await supabase.from('movements').insert({
         user_id: user.id,
         product_id: movement.productId,
         product_name: movement.productName,
@@ -290,9 +330,28 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         supplier: movement.supplier,
         customer: movement.customer,
         reason: movement.reason,
-      });
+      }).select().single();
 
       if (movementError) throw movementError;
+
+      // Atualiza o estado local imediatamente
+      if (data) {
+        const newMovement: Movement = {
+          id: data.id,
+          productId: data.product_id,
+          productName: data.product_name,
+          type: data.type as 'entry' | 'exit',
+          quantity: data.quantity,
+          price: Number(data.price),
+          date: data.date,
+          supplier: data.supplier,
+          customer: data.customer,
+          reason: data.reason,
+          userId: data.user_id,
+          userName: user.name,
+        };
+        setMovements(prev => [newMovement, ...prev]);
+      }
 
       // Update product quantity
       const product = products.find((p) => p.id === movement.productId);
@@ -314,12 +373,23 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!user) return;
 
     try {
-      const { error } = await supabase.from('notes').insert({
+      const { data, error } = await supabase.from('notes').insert({
         user_id: user.id,
         content: note.content,
-      });
+      }).select().single();
 
       if (error) throw error;
+
+      // Atualiza o estado local imediatamente
+      if (data) {
+        const newNote: Note = {
+          id: data.id,
+          content: data.content,
+          createdAt: data.created_at,
+          userId: data.user_id,
+        };
+        setNotes(prev => [newNote, ...prev]);
+      }
     } catch (error) {
       console.error('Error adding note:', error);
       throw error;
@@ -337,6 +407,9 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         .eq('user_id', user.id);
 
       if (error) throw error;
+
+      // Atualiza o estado local imediatamente
+      setNotes(prev => prev.filter(n => n.id !== id));
     } catch (error) {
       console.error('Error deleting note:', error);
       throw error;
