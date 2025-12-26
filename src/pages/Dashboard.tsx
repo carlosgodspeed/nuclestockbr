@@ -156,56 +156,28 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               {topProducts.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={topProducts} layout="vertical" margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
-                    <defs>
-                      <linearGradient id="colorValue" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.9}/>
-                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.5}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} horizontal={false} />
-                    <XAxis 
-                      type="number"
-                      stroke="hsl(var(--muted-foreground))" 
-                      tick={{ fontSize: 10 }}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(value) => {
-                        if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
-                        if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
-                        return `${value}`;
-                      }}
-                    />
-                    <YAxis 
-                      dataKey="name"
-                      type="category"
-                      stroke="hsl(var(--muted-foreground))" 
-                      tick={{ fontSize: 11 }}
-                      tickLine={false}
-                      axisLine={false}
-                      width={100}
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                        fontSize: '13px'
-                      }}
-                      formatter={(value: number) => [value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 'Valor']}
-                    />
-                    <Bar 
-                      dataKey="value" 
-                      fill="url(#colorValue)" 
-                      radius={[0, 6, 6, 0]}
-                      maxBarSize={35}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
+                <div className="space-y-3">
+                  {topProducts.map((product, index) => {
+                    const maxValue = Math.max(...topProducts.map(p => p.value));
+                    const percentage = (product.value / maxValue) * 100;
+                    return (
+                      <div key={index} className="flex items-center gap-3">
+                        <span className="text-sm text-muted-foreground w-28 truncate">{product.name}</span>
+                        <div className="flex-1 h-6 bg-muted/30 rounded overflow-hidden relative">
+                          <div 
+                            className="h-full bg-primary rounded transition-all duration-500"
+                            style={{ width: `${percentage}%` }}
+                          />
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-medium text-foreground">
+                            {product.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               ) : (
-                <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                <div className="h-[200px] flex items-center justify-center text-muted-foreground">
                   Nenhum produto cadastrado
                 </div>
               )}
