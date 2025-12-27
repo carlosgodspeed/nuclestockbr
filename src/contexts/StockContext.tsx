@@ -137,7 +137,7 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       if (error) throw error;
 
-      const mappedMovements: Movement[] = data.map((m) => ({
+      const mappedMovements: Movement[] = data.map((m: any) => ({
         id: m.id,
         productId: m.product_id,
         productName: m.product_name,
@@ -146,7 +146,13 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         price: Number(m.price),
         date: m.date,
         supplier: m.supplier,
+        supplierPhone: m.supplier_phone,
+        supplierEmail: m.supplier_email,
+        supplierNotes: m.supplier_notes,
         customer: m.customer,
+        customerPhone: m.customer_phone,
+        customerEmail: m.customer_email,
+        customerNotes: m.customer_notes,
         reason: m.reason,
         userId: m.user_id,
         userName: user.name,
@@ -328,7 +334,13 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         price: movement.price,
         date: movement.date,
         supplier: movement.supplier,
+        supplier_phone: movement.supplierPhone,
+        supplier_email: movement.supplierEmail,
+        supplier_notes: movement.supplierNotes,
         customer: movement.customer,
+        customer_phone: movement.customerPhone,
+        customer_email: movement.customerEmail,
+        customer_notes: movement.customerNotes,
         reason: movement.reason,
       }).select().single();
 
@@ -345,7 +357,13 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           price: Number(data.price),
           date: data.date,
           supplier: data.supplier,
+          supplierPhone: data.supplier_phone,
+          supplierEmail: data.supplier_email,
+          supplierNotes: data.supplier_notes,
           customer: data.customer,
+          customerPhone: data.customer_phone,
+          customerEmail: data.customer_email,
+          customerNotes: data.customer_notes,
           reason: data.reason,
           userId: data.user_id,
           userName: user.name,

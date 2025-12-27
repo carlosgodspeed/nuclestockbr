@@ -66,16 +66,21 @@ const Reports = () => {
 
   const stats = useMemo(() => {
     const totalValue = filteredData.reduce((sum, p) => sum + (p.price * p.quantity), 0);
-    const entriesValue = filteredMovements.filter(m => m.type === 'entry').reduce((sum, m) => sum + (m.quantity * (m.price || 0)), 0);
-    const exitsQuantity = filteredMovements.filter(m => m.type === 'exit').reduce((sum, m) => sum + m.quantity, 0);
-    const estimatedProfit = filteredData.reduce((sum, p) => {
-      if (p.cost && p.price && p.cost > 0 && p.price > 0) {
-        return sum + ((p.price - p.cost) * p.quantity);
-      }
-      return sum;
-    }, 0);
+    const purchasesValue = filteredMovements.filter(m => m.type === 'entry').reduce((sum, m) => sum + (m.quantity * (m.price || 0)), 0);
+    const salesQuantity = filteredMovements.filter(m => m.type === 'exit').reduce((sum, m) => sum + m.quantity, 0);
+    
+    // Monthly profit based on filtered movements (sales)
+    const monthlyProfit = filteredMovements
+      .filter(m => m.type === 'exit')
+      .reduce((sum, m) => {
+        const product = filteredData.find(p => p.id === m.productId);
+        if (product && product.cost && product.price && product.cost > 0 && product.price > 0) {
+          return sum + ((product.price - product.cost) * m.quantity);
+        }
+        return sum;
+      }, 0);
 
-    return { totalValue, entriesValue, exitsQuantity, estimatedProfit };
+    return { totalValue, purchasesValue, salesQuantity, monthlyProfit };
   }, [filteredData, filteredMovements]);
 
   const categoryData = useMemo(() => {
@@ -132,11 +137,11 @@ const Reports = () => {
       pdf.setTextColor(60, 60, 60);
       pdf.text(`Valor Total em Estoque: ${stats.totalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, 14, yPosition);
       yPosition += 7;
-      pdf.text(`Valor de Entradas: ${stats.entriesValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, 14, yPosition);
+      pdf.text(`Valor de Compras: ${stats.purchasesValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, 14, yPosition);
       yPosition += 7;
-      pdf.text(`Quantidade de Saídas: ${stats.exitsQuantity} unidades`, 14, yPosition);
+      pdf.text(`Quantidade de Vendas: ${stats.salesQuantity} unidades`, 14, yPosition);
       yPosition += 7;
-      pdf.text(`Lucro Estimado: ${stats.estimatedProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, 14, yPosition);
+      pdf.text(`Lucro Mensal: ${stats.monthlyProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, 14, yPosition);
       yPosition += 15;
 
       // Capturar gráfico de barras
@@ -363,14 +368,14 @@ const Reports = () => {
 
           <Card className="bg-gradient-to-br from-yellow-500/10 via-yellow-500/5 to-transparent border-yellow-500/20">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Quantidade de Saídas</CardTitle>
+              <CardTitle className="text-sm font-medium">Quantidade de Vendas</CardTitle>
               <div className="p-2 bg-yellow-500/10 rounded-lg">
                 <ShoppingCart className="h-5 w-5 text-yellow-500" />
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-2xl sm:text-3xl font-bold text-yellow-500 break-words">
-                {stats.exitsQuantity} un.
+                {stats.salesQuantity} un.
               </p>
             </CardContent>
           </Card>
@@ -393,28 +398,28 @@ const Reports = () => {
 
           <Card className="bg-gradient-to-br from-pink-500/10 via-pink-500/5 to-transparent border-pink-500/20">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Valor de Entradas</CardTitle>
+              <CardTitle className="text-sm font-medium">Valor de Compras</CardTitle>
               <div className="p-2 bg-pink-500/10 rounded-lg">
                 <TrendingUp className="h-5 w-5 text-pink-500" />
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-xl sm:text-2xl md:text-3xl font-bold text-pink-500 break-words">
-                {stats.entriesValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                {stats.purchasesValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </p>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent border-green-500/20">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Lucro Estimado</CardTitle>
+              <CardTitle className="text-sm font-medium">Lucro Mensal</CardTitle>
               <div className="p-2 bg-green-500/10 rounded-lg">
                 <TrendingUp className="h-5 w-5 text-green-500" />
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-xl sm:text-2xl md:text-3xl font-bold text-green-500 break-words">
-                {stats.estimatedProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                {stats.monthlyProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </p>
             </CardContent>
           </Card>

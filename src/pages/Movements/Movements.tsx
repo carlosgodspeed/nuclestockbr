@@ -9,9 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, TrendingUp, ShoppingCart, ArrowUpDown, Calendar } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Plus, TrendingUp, ShoppingCart, ArrowUpDown, Calendar, ChevronDown, Phone, Mail, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { format, eachDayOfInterval, subDays, subMonths } from 'date-fns';
+import { format, eachDayOfInterval, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
@@ -22,13 +23,19 @@ const Movements = () => {
   const [open, setOpen] = useState(false);
   const [periodFilter, setPeriodFilter] = useState('30');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [showExtraFields, setShowExtraFields] = useState(false);
   const [formData, setFormData] = useState({
     productId: '',
     type: 'entry' as 'entry' | 'exit',
     quantity: 0,
     supplier: '',
+    supplierPhone: '',
+    supplierEmail: '',
+    supplierNotes: '',
     customer: '',
-    reason: '',
+    customerPhone: '',
+    customerEmail: '',
+    customerNotes: '',
   });
 
   const categories = useMemo(() => {
@@ -62,35 +69,35 @@ const Movements = () => {
         format(new Date(m.date), 'yyyy-MM-dd') === dateStr
       );
       
-      const entries = dayMovements
+      const compras = dayMovements
         .filter(m => m.type === 'entry')
         .reduce((sum, m) => sum + (m.quantity * (m.price || 0)), 0);
       
-      const exits = dayMovements
+      const vendas = dayMovements
         .filter(m => m.type === 'exit')
         .reduce((sum, m) => sum + m.quantity, 0);
 
       return {
         date: format(date, 'dd/MM'),
-        entradas: entries,
-        saídas: exits
+        compras,
+        vendas
       };
     });
   }, [filteredMovements, periodFilter]);
 
   const categoryChartData = useMemo(() => {
-    const categoryStats = new Map<string, { entradas: number; saidas: number }>();
+    const categoryStats = new Map<string, { compras: number; vendas: number }>();
     
     filteredMovements.forEach(m => {
       const product = products.find(p => p.id === m.productId);
       if (!product) return;
       
-      const current = categoryStats.get(product.category) || { entradas: 0, saidas: 0 };
+      const current = categoryStats.get(product.category) || { compras: 0, vendas: 0 };
       
       if (m.type === 'entry') {
-        current.entradas += m.quantity * (m.price || 0);
+        current.compras += m.quantity * (m.price || 0);
       } else {
-        current.saidas += m.quantity;
+        current.vendas += m.quantity;
       }
       
       categoryStats.set(product.category, current);
@@ -122,25 +129,36 @@ const Movements = () => {
       price: product.price,
       date: new Date().toISOString(),
       supplier: formData.supplier,
+      supplierPhone: formData.supplierPhone,
+      supplierEmail: formData.supplierEmail,
+      supplierNotes: formData.supplierNotes,
       customer: formData.customer,
-      reason: formData.reason,
+      customerPhone: formData.customerPhone,
+      customerEmail: formData.customerEmail,
+      customerNotes: formData.customerNotes,
       userId: user.id,
       userName: user.name,
     });
 
     toast({ 
       title: 'Movimentação registrada com sucesso!',
-      description: `${formData.type === 'entry' ? 'Entrada' : 'Saída'} de ${formData.quantity} unidades`
+      description: `${formData.type === 'entry' ? 'Compra' : 'Venda'} de ${formData.quantity} unidades`
     });
     
     setOpen(false);
+    setShowExtraFields(false);
     setFormData({
       productId: '',
       type: 'entry',
       quantity: 0,
       supplier: '',
+      supplierPhone: '',
+      supplierEmail: '',
+      supplierNotes: '',
       customer: '',
-      reason: '',
+      customerPhone: '',
+      customerEmail: '',
+      customerNotes: '',
     });
   };
 
@@ -150,17 +168,20 @@ const Movements = () => {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">Movimentações</h1>
-            <p className="text-muted-foreground">Registre entradas e saídas de produtos</p>
+            <p className="text-muted-foreground">Registre compras e vendas de produtos</p>
           </div>
           
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog open={open} onOpenChange={(isOpen) => {
+            setOpen(isOpen);
+            if (!isOpen) setShowExtraFields(false);
+          }}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
                 Nova Movimentação
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Nova Movimentação</DialogTitle>
               </DialogHeader>
@@ -197,8 +218,8 @@ const Movements = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="entry">Entrada</SelectItem>
-                      <SelectItem value="exit">Saída</SelectItem>
+                      <SelectItem value="entry">Compra (de Fornecedor)</SelectItem>
+                      <SelectItem value="exit">Venda (para Cliente)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -216,35 +237,109 @@ const Movements = () => {
                 </div>
 
                 {formData.type === 'entry' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="supplier">Fornecedor</Label>
-                    <Input
-                      id="supplier"
-                      value={formData.supplier}
-                      onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
-                    />
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="supplier">Fornecedor</Label>
+                      <Input
+                        id="supplier"
+                        value={formData.supplier}
+                        onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
+                        placeholder="Nome do fornecedor"
+                      />
+                    </div>
+                    
+                    <Collapsible open={showExtraFields} onOpenChange={setShowExtraFields}>
+                      <CollapsibleTrigger asChild>
+                        <Button variant="ghost" type="button" className="w-full justify-between">
+                          Dados adicionais do fornecedor
+                          <ChevronDown className={`h-4 w-4 transition-transform ${showExtraFields ? 'rotate-180' : ''}`} />
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="space-y-3 pt-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="supplierPhone">Telefone</Label>
+                          <Input
+                            id="supplierPhone"
+                            value={formData.supplierPhone}
+                            onChange={(e) => setFormData({ ...formData, supplierPhone: e.target.value })}
+                            placeholder="(00) 00000-0000"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="supplierEmail">Email</Label>
+                          <Input
+                            id="supplierEmail"
+                            type="email"
+                            value={formData.supplierEmail}
+                            onChange={(e) => setFormData({ ...formData, supplierEmail: e.target.value })}
+                            placeholder="email@exemplo.com"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="supplierNotes">Observações</Label>
+                          <Input
+                            id="supplierNotes"
+                            value={formData.supplierNotes}
+                            onChange={(e) => setFormData({ ...formData, supplierNotes: e.target.value })}
+                            placeholder="Informações adicionais"
+                          />
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
                   </div>
                 )}
 
                 {formData.type === 'exit' && (
-                  <>
+                  <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="customer">Cliente</Label>
                       <Input
                         id="customer"
                         value={formData.customer}
                         onChange={(e) => setFormData({ ...formData, customer: e.target.value })}
+                        placeholder="Nome do cliente"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="reason">Motivo</Label>
-                      <Input
-                        id="reason"
-                        value={formData.reason}
-                        onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                      />
-                    </div>
-                  </>
+                    
+                    <Collapsible open={showExtraFields} onOpenChange={setShowExtraFields}>
+                      <CollapsibleTrigger asChild>
+                        <Button variant="ghost" type="button" className="w-full justify-between">
+                          Dados adicionais do cliente
+                          <ChevronDown className={`h-4 w-4 transition-transform ${showExtraFields ? 'rotate-180' : ''}`} />
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="space-y-3 pt-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="customerPhone">Telefone</Label>
+                          <Input
+                            id="customerPhone"
+                            value={formData.customerPhone}
+                            onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
+                            placeholder="(00) 00000-0000"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="customerEmail">Email</Label>
+                          <Input
+                            id="customerEmail"
+                            type="email"
+                            value={formData.customerEmail}
+                            onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
+                            placeholder="email@exemplo.com"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="customerNotes">Observações</Label>
+                          <Input
+                            id="customerNotes"
+                            value={formData.customerNotes}
+                            onChange={(e) => setFormData({ ...formData, customerNotes: e.target.value })}
+                            placeholder="Informações adicionais"
+                          />
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </div>
                 )}
 
                 <div className="flex gap-2 justify-end">
@@ -347,10 +442,10 @@ const Movements = () => {
                         fontWeight: '600'
                       }}
                       formatter={(value: number, name: string) => {
-                        if (name === 'entradas') {
-                          return [value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 'Entradas (R$)'];
+                        if (name === 'compras') {
+                          return [value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 'Compras (R$)'];
                         }
-                        return [`${value} un.`, 'Saídas (Quantidade)'];
+                        return [`${value} un.`, 'Vendas (Quantidade)'];
                       }}
                       labelStyle={{ fontWeight: 'bold', marginBottom: '4px' }}
                     />
@@ -359,8 +454,8 @@ const Movements = () => {
                     />
                     <Line 
                       type="monotone" 
-                      dataKey="entradas" 
-                      name="Entradas (R$)"
+                      dataKey="compras" 
+                      name="Compras (R$)"
                       stroke="rgb(236, 72, 153)" 
                       strokeWidth={3}
                       dot={{ fill: 'rgb(236, 72, 153)', r: 5, strokeWidth: 2 }}
@@ -373,8 +468,8 @@ const Movements = () => {
                     />
                     <Line 
                       type="monotone" 
-                      dataKey="saídas" 
-                      name="Saídas (un.)"
+                      dataKey="vendas" 
+                      name="Vendas (un.)"
                       stroke="rgb(234, 179, 8)" 
                       strokeWidth={3}
                       dot={{ fill: 'rgb(234, 179, 8)', r: 5, strokeWidth: 2 }}
@@ -430,10 +525,10 @@ const Movements = () => {
                         fontWeight: '600'
                       }}
                       formatter={(value: number, name: string) => {
-                        if (name === 'entradas') {
-                          return [value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 'Entradas (R$)'];
+                        if (name === 'compras') {
+                          return [value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 'Compras (R$)'];
                         }
-                        return [`${value} un.`, 'Saídas (Quantidade)'];
+                        return [`${value} un.`, 'Vendas (Quantidade)'];
                       }}
                       labelStyle={{ fontWeight: 'bold', marginBottom: '4px' }}
                     />
@@ -441,8 +536,8 @@ const Movements = () => {
                       wrapperStyle={{ fontSize: '13px', fontWeight: '500' }}
                     />
                     <Bar 
-                      dataKey="entradas" 
-                      name="Entradas (R$)"
+                      dataKey="compras" 
+                      name="Compras (R$)"
                       fill="url(#pinkBar)" 
                       radius={[8, 8, 0, 0]}
                       label={{ 
@@ -452,8 +547,8 @@ const Movements = () => {
                       }}
                     />
                     <Bar 
-                      dataKey="saídas" 
-                      name="Saídas (un.)"
+                      dataKey="vendas" 
+                      name="Vendas (un.)"
                       fill="url(#yellowBar)" 
                       radius={[8, 8, 0, 0]}
                       label={{ 
@@ -475,7 +570,7 @@ const Movements = () => {
               <TrendingUp className="h-16 w-16 text-muted-foreground mb-4" />
               <p className="text-lg font-medium mb-2">Nenhuma movimentação registrada</p>
               <p className="text-sm text-muted-foreground">
-                Registre entradas e saídas de produtos
+                Registre compras e vendas de produtos
               </p>
             </CardContent>
           </Card>
@@ -496,7 +591,7 @@ const Movements = () => {
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-semibold">{movement.productName}</h3>
                           <Badge variant={movement.type === 'entry' ? 'default' : 'destructive'}>
-                            {movement.type === 'entry' ? 'Entrada' : 'Saída'}
+                            {movement.type === 'entry' ? 'Compra' : 'Venda'}
                           </Badge>
                         </div>
                         
@@ -517,6 +612,27 @@ const Movements = () => {
                             </div>
                           )}
                           
+                          {movement.supplierPhone && (
+                            <div className="flex gap-2 items-center">
+                              <Phone className="h-3 w-3 text-muted-foreground" />
+                              <span>{movement.supplierPhone}</span>
+                            </div>
+                          )}
+                          
+                          {movement.supplierEmail && (
+                            <div className="flex gap-2 items-center">
+                              <Mail className="h-3 w-3 text-muted-foreground" />
+                              <span>{movement.supplierEmail}</span>
+                            </div>
+                          )}
+                          
+                          {movement.supplierNotes && (
+                            <div className="flex gap-2 items-center">
+                              <FileText className="h-3 w-3 text-muted-foreground" />
+                              <span>{movement.supplierNotes}</span>
+                            </div>
+                          )}
+                          
                           {movement.customer && (
                             <div className="flex gap-2">
                               <span className="text-muted-foreground">Cliente:</span>
@@ -524,10 +640,24 @@ const Movements = () => {
                             </div>
                           )}
                           
-                          {movement.reason && (
-                            <div className="flex gap-2">
-                              <span className="text-muted-foreground">Motivo:</span>
-                              <span>{movement.reason}</span>
+                          {movement.customerPhone && (
+                            <div className="flex gap-2 items-center">
+                              <Phone className="h-3 w-3 text-muted-foreground" />
+                              <span>{movement.customerPhone}</span>
+                            </div>
+                          )}
+                          
+                          {movement.customerEmail && (
+                            <div className="flex gap-2 items-center">
+                              <Mail className="h-3 w-3 text-muted-foreground" />
+                              <span>{movement.customerEmail}</span>
+                            </div>
+                          )}
+                          
+                          {movement.customerNotes && (
+                            <div className="flex gap-2 items-center">
+                              <FileText className="h-3 w-3 text-muted-foreground" />
+                              <span>{movement.customerNotes}</span>
                             </div>
                           )}
                           

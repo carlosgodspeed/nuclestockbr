@@ -18,6 +18,9 @@ export type Database = {
         Row: {
           created_at: string
           customer: string | null
+          customer_email: string | null
+          customer_notes: string | null
+          customer_phone: string | null
           date: string
           id: string
           price: number
@@ -26,12 +29,18 @@ export type Database = {
           quantity: number
           reason: string | null
           supplier: string | null
+          supplier_email: string | null
+          supplier_notes: string | null
+          supplier_phone: string | null
           type: string
           user_id: string
         }
         Insert: {
           created_at?: string
           customer?: string | null
+          customer_email?: string | null
+          customer_notes?: string | null
+          customer_phone?: string | null
           date?: string
           id?: string
           price: number
@@ -40,12 +49,18 @@ export type Database = {
           quantity: number
           reason?: string | null
           supplier?: string | null
+          supplier_email?: string | null
+          supplier_notes?: string | null
+          supplier_phone?: string | null
           type: string
           user_id: string
         }
         Update: {
           created_at?: string
           customer?: string | null
+          customer_email?: string | null
+          customer_notes?: string | null
+          customer_phone?: string | null
           date?: string
           id?: string
           price?: number
@@ -54,6 +69,9 @@ export type Database = {
           quantity?: number
           reason?: string | null
           supplier?: string | null
+          supplier_email?: string | null
+          supplier_notes?: string | null
+          supplier_phone?: string | null
           type?: string
           user_id?: string
         }
