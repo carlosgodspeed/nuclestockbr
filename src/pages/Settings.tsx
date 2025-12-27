@@ -137,15 +137,8 @@ const Settings = () => {
           <CardHeader>
             <CardTitle>Informações do Sistema</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm">
+          <CardContent className="text-sm">
             <p><strong>Versão:</strong> 1.0.0</p>
-            <p><strong>Backend:</strong> Lovable Cloud</p>
-            <p><strong>Banco de Dados:</strong> PostgreSQL</p>
-            <p><strong>Armazenamento:</strong> Cloud Storage</p>
-            <p className="text-muted-foreground pt-4">
-              Seus dados estão armazenados de forma segura na nuvem com backup automático. 
-              Acesse de qualquer dispositivo com suas credenciais.
-            </p>
           </CardContent>
         </Card>
       </div>

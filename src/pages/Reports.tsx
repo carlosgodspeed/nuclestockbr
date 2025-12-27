@@ -471,54 +471,71 @@ const Reports = () => {
             <CardContent>
               <div ref={pieChartRef}>
               {categoryData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={350}>
-                  <PieChart margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
-                    <Pie
-                      data={categoryData}
-                      cx="50%"
-                      cy="45%"
-                      labelLine={false}
-                      label={false}
-                      outerRadius={85}
-                      innerRadius={45}
-                      fill="#8884d8"
-                      dataKey="value"
-                      paddingAngle={3}
-                    >
-                      {categoryData.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                        fontSize: '13px'
-                      }}
-                      formatter={(value: number, name: string) => [
-                        value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 
-                        name
-                      ]}
-                    />
-                    <Legend 
-                      layout="horizontal"
-                      verticalAlign="bottom"
-                      align="center"
-                      wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }}
-                      formatter={(value) => {
-                        const item = categoryData.find(c => c.name === value);
-                        if (item) {
-                          return `${value}: ${item.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
-                        }
-                        return value;
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                <div className="space-y-4">
+                  {/* Legend at top */}
+                  <div className="flex flex-wrap justify-center gap-3">
+                    {categoryData.map((item, index) => (
+                      <div key={item.name} className="flex items-center gap-1.5">
+                        <div 
+                          className="w-2.5 h-2.5 rounded-full" 
+                          style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                        />
+                        <span className="text-xs text-muted-foreground">{item.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Donut chart with percentages */}
+                  <div className="relative">
+                    <ResponsiveContainer width="100%" height={280}>
+                      <PieChart>
+                        <Pie
+                          data={categoryData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+                            const RADIAN = Math.PI / 180;
+                            const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                            const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                            const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                            return percent > 0.05 ? (
+                              <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight={500}>
+                                {`${(percent * 100).toFixed(1)}%`}
+                              </text>
+                            ) : null;
+                          }}
+                          outerRadius={110}
+                          innerRadius={60}
+                          dataKey="value"
+                          paddingAngle={2}
+                        >
+                          {categoryData.map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'hsl(var(--card))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px',
+                            fontSize: '12px'
+                          }}
+                          formatter={(value: number, name: string) => [
+                            value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 
+                            name
+                          ]}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    {/* Center icon */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                      <Package className="h-10 w-10 text-muted-foreground/40" />
+                    </div>
+                  </div>
+                </div>
               ) : (
-                <div className="h-[350px] flex items-center justify-center text-muted-foreground">
+                <div className="h-[320px] flex items-center justify-center text-muted-foreground">
                   Nenhuma categoria disponível
                 </div>
               )}
