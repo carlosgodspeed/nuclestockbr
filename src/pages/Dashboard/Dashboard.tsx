@@ -19,16 +19,27 @@ const Dashboard = () => {
   const stats = useMemo(() => {
     const totalProducts = products.length;
     const totalValue = products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
-    const entriesValue = movements.filter(m => m.type === 'entry').reduce((sum, m) => sum + (m.quantity * (m.price || 0)), 0);
-    const exitsQuantity = movements.filter(m => m.type === 'exit').reduce((sum, m) => sum + m.quantity, 0);
-    const estimatedProfit = products.reduce((sum, p) => {
-      if (p.cost && p.price && p.cost > 0 && p.price > 0) {
-        return sum + ((p.price - p.cost) * p.quantity);
-      }
-      return sum;
-    }, 0);
+    
+    // Filter movements for current month only
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const currentMonthMovements = movements.filter(m => new Date(m.date) >= currentMonthStart);
+    
+    const purchasesValue = currentMonthMovements.filter(m => m.type === 'entry').reduce((sum, m) => sum + (m.quantity * (m.price || 0)), 0);
+    const salesQuantity = currentMonthMovements.filter(m => m.type === 'exit').reduce((sum, m) => sum + m.quantity, 0);
+    
+    // Monthly profit: sum of (price - cost) * quantity for sales in current month
+    const monthlyProfit = currentMonthMovements
+      .filter(m => m.type === 'exit')
+      .reduce((sum, m) => {
+        const product = products.find(p => p.id === m.productId);
+        if (product && product.cost && product.price && product.cost > 0 && product.price > 0) {
+          return sum + ((product.price - product.cost) * m.quantity);
+        }
+        return sum;
+      }, 0);
 
-    return { totalProducts, totalValue, entriesValue, exitsQuantity, estimatedProfit };
+    return { totalProducts, totalValue, purchasesValue, salesQuantity, monthlyProfit };
   }, [products, movements]);
 
   const categoryData = useMemo(() => {
@@ -89,13 +100,13 @@ const Dashboard = () => {
 
           <Card className="stat-card stat-card-yellow">
             <CardHeader className="stat-card-header">
-              <CardTitle className="stat-card-title">Quantidade de Saídas</CardTitle>
+              <CardTitle className="stat-card-title">Quantidade de Vendas</CardTitle>
               <div className="stat-icon-wrapper stat-icon-yellow">
                 <ShoppingCart className="stat-icon" />
               </div>
             </CardHeader>
             <CardContent>
-              <p className="stat-value stat-value-yellow">{stats.exitsQuantity} un.</p>
+              <p className="stat-value stat-value-yellow">{stats.salesQuantity} un.</p>
             </CardContent>
           </Card>
         </div>
@@ -117,28 +128,28 @@ const Dashboard = () => {
 
           <Card className="stat-card stat-card-pink">
             <CardHeader className="stat-card-header">
-              <CardTitle className="stat-card-title">Valor de Entradas</CardTitle>
+              <CardTitle className="stat-card-title">Valor de Compras</CardTitle>
               <div className="stat-icon-wrapper stat-icon-pink">
                 <TrendingUp className="stat-icon" />
               </div>
             </CardHeader>
             <CardContent>
               <p className="stat-value stat-value-pink">
-                {stats.entriesValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                {stats.purchasesValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </p>
             </CardContent>
           </Card>
 
           <Card className="stat-card stat-card-green">
             <CardHeader className="stat-card-header">
-              <CardTitle className="stat-card-title">Lucro Estimado</CardTitle>
+              <CardTitle className="stat-card-title">Lucro Mensal</CardTitle>
               <div className="stat-icon-wrapper stat-icon-green">
                 <TrendingDown className="stat-icon" />
               </div>
             </CardHeader>
             <CardContent>
               <p className="stat-value stat-value-green">
-                {stats.estimatedProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                {stats.monthlyProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </p>
             </CardContent>
           </Card>

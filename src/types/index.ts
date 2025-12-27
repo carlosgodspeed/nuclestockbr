@@ -37,7 +37,13 @@ export interface Movement {
   price: number;
   date: string;
   supplier?: string;
+  supplierPhone?: string;
+  supplierEmail?: string;
+  supplierNotes?: string;
   customer?: string;
+  customerPhone?: string;
+  customerEmail?: string;
+  customerNotes?: string;
   reason?: string;
   userId: string;
   userName: string;
