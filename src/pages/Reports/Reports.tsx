@@ -66,12 +66,12 @@ const Reports = () => {
 
   const stats = useMemo(() => {
     const totalValue = filteredData.reduce((sum, p) => sum + (p.price * p.quantity), 0);
-    const purchasesValue = filteredMovements.filter(m => m.type === 'entry').reduce((sum, m) => sum + (m.quantity * (m.price || 0)), 0);
-    const salesQuantity = filteredMovements.filter(m => m.type === 'exit').reduce((sum, m) => sum + m.quantity, 0);
+    const purchasesValue = filteredMovements.filter(m => m.type === 'purchase').reduce((sum, m) => sum + (m.quantity * (m.price || 0)), 0);
+    const salesQuantity = filteredMovements.filter(m => m.type === 'sale').reduce((sum, m) => sum + m.quantity, 0);
     
     // Monthly profit based on filtered movements (sales)
     const monthlyProfit = filteredMovements
-      .filter(m => m.type === 'exit')
+      .filter(m => m.type === 'sale')
       .reduce((sum, m) => {
         const product = filteredData.find(p => p.id === m.productId);
         if (product && product.cost && product.price && product.cost > 0 && product.price > 0) {

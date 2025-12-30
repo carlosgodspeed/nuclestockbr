@@ -141,7 +141,7 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         id: m.id,
         productId: m.product_id,
         productName: m.product_name,
-        type: m.type as 'entry' | 'exit',
+        type: m.type as 'purchase' | 'sale',
         quantity: m.quantity,
         price: Number(m.price),
         date: m.date,
@@ -352,7 +352,7 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           id: data.id,
           productId: data.product_id,
           productName: data.product_name,
-          type: data.type as 'entry' | 'exit',
+          type: data.type as 'purchase' | 'sale',
           quantity: data.quantity,
           price: Number(data.price),
           date: data.date,
@@ -375,7 +375,7 @@ export const StockProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const product = products.find((p) => p.id === movement.productId);
       if (product) {
         const newQuantity =
-          movement.type === 'entry'
+          movement.type === 'purchase'
             ? product.quantity + movement.quantity
             : product.quantity - movement.quantity;
 

@@ -26,7 +26,7 @@ const Movements = () => {
   const [showExtraFields, setShowExtraFields] = useState(false);
   const [formData, setFormData] = useState({
     productId: '',
-    type: 'entry' as 'entry' | 'exit',
+    type: 'purchase' as 'purchase' | 'sale',
     quantity: 0,
     supplier: '',
     supplierPhone: '',
@@ -70,11 +70,11 @@ const Movements = () => {
       );
       
       const compras = dayMovements
-        .filter(m => m.type === 'entry')
+        .filter(m => m.type === 'purchase')
         .reduce((sum, m) => sum + (m.quantity * (m.price || 0)), 0);
       
       const vendas = dayMovements
-        .filter(m => m.type === 'exit')
+        .filter(m => m.type === 'sale')
         .reduce((sum, m) => sum + m.quantity, 0);
 
       return {
@@ -94,7 +94,7 @@ const Movements = () => {
       
       const current = categoryStats.get(product.category) || { compras: 0, vendas: 0 };
       
-      if (m.type === 'entry') {
+      if (m.type === 'purchase') {
         current.compras += m.quantity * (m.price || 0);
       } else {
         current.vendas += m.quantity;
@@ -112,7 +112,7 @@ const Movements = () => {
     const product = products.find(p => p.id === formData.productId);
     if (!product || !user) return;
 
-    if (formData.type === 'exit' && formData.quantity > product.quantity) {
+    if (formData.type === 'sale' && formData.quantity > product.quantity) {
       toast({ 
         title: 'Erro', 
         description: 'Quantidade indisponível em estoque',
@@ -142,14 +142,14 @@ const Movements = () => {
 
     toast({ 
       title: 'Movimentação registrada com sucesso!',
-      description: `${formData.type === 'entry' ? 'Compra' : 'Venda'} de ${formData.quantity} unidades`
+      description: `${formData.type === 'purchase' ? 'Compra' : 'Venda'} de ${formData.quantity} unidades`
     });
     
     setOpen(false);
     setShowExtraFields(false);
     setFormData({
       productId: '',
-      type: 'entry',
+      type: 'purchase',
       quantity: 0,
       supplier: '',
       supplierPhone: '',
@@ -211,15 +211,15 @@ const Movements = () => {
                   <Label htmlFor="type">Tipo *</Label>
                   <Select
                     value={formData.type}
-                    onValueChange={(value: 'entry' | 'exit') => setFormData({ ...formData, type: value })}
+                    onValueChange={(value: 'purchase' | 'sale') => setFormData({ ...formData, type: value })}
                     required
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="entry">Compra (de Fornecedor)</SelectItem>
-                      <SelectItem value="exit">Venda (para Cliente)</SelectItem>
+                      <SelectItem value="purchase">Compra (de Fornecedor)</SelectItem>
+                      <SelectItem value="sale">Venda (para Cliente)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -236,7 +236,7 @@ const Movements = () => {
                   />
                 </div>
 
-                {formData.type === 'entry' && (
+                {formData.type === 'purchase' && (
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="supplier">Fornecedor</Label>
@@ -289,7 +289,7 @@ const Movements = () => {
                   </div>
                 )}
 
-                {formData.type === 'exit' && (
+                {formData.type === 'sale' && (
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="customer">Cliente</Label>
@@ -581,7 +581,7 @@ const Movements = () => {
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3 flex-1">
-                      {movement.type === 'entry' ? (
+                      {movement.type === 'purchase' ? (
                         <TrendingUp className="h-5 w-5 text-pink-500 mt-1" />
                       ) : (
                         <ShoppingCart className="h-5 w-5 text-yellow-500 mt-1" />
@@ -590,8 +590,8 @@ const Movements = () => {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-semibold">{movement.productName}</h3>
-                          <Badge variant={movement.type === 'entry' ? 'default' : 'destructive'}>
-                            {movement.type === 'entry' ? 'Compra' : 'Venda'}
+                          <Badge variant={movement.type === 'purchase' ? 'default' : 'destructive'}>
+                            {movement.type === 'purchase' ? 'Compra' : 'Venda'}
                           </Badge>
                         </div>
                         
