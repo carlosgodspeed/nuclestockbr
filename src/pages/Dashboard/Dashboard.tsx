@@ -25,12 +25,12 @@ const Dashboard = () => {
     const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const currentMonthMovements = movements.filter(m => new Date(m.date) >= currentMonthStart);
     
-    const purchasesValue = currentMonthMovements.filter(m => m.type === 'purchase').reduce((sum, m) => sum + (m.quantity * (m.price || 0)), 0);
-    const salesQuantity = currentMonthMovements.filter(m => m.type === 'sale').reduce((sum, m) => sum + m.quantity, 0);
+    const purchasesValue = currentMonthMovements.filter(m => m.type === 'entry').reduce((sum, m) => sum + (m.quantity * (m.price || 0)), 0);
+    const salesQuantity = currentMonthMovements.filter(m => m.type === 'exit').reduce((sum, m) => sum + m.quantity, 0);
     
     // Monthly profit: sum of (price - cost) * quantity for sales in current month
     const monthlyProfit = currentMonthMovements
-      .filter(m => m.type === 'sale')
+      .filter(m => m.type === 'exit')
       .reduce((sum, m) => {
         const product = products.find(p => p.id === m.productId);
         if (product && product.cost && product.price && product.cost > 0 && product.price > 0) {

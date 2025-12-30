@@ -66,21 +66,16 @@ const Reports = () => {
 
   const stats = useMemo(() => {
     const totalValue = filteredData.reduce((sum, p) => sum + (p.price * p.quantity), 0);
-    const purchasesValue = filteredMovements.filter(m => m.type === 'entry').reduce((sum, m) => sum + (m.quantity * (m.price || 0)), 0);
-    const salesQuantity = filteredMovements.filter(m => m.type === 'exit').reduce((sum, m) => sum + m.quantity, 0);
-    
-    // Monthly profit based on filtered movements (sales)
-    const monthlyProfit = filteredMovements
-      .filter(m => m.type === 'exit')
-      .reduce((sum, m) => {
-        const product = filteredData.find(p => p.id === m.productId);
-        if (product && product.cost && product.price && product.cost > 0 && product.price > 0) {
-          return sum + ((product.price - product.cost) * m.quantity);
-        }
-        return sum;
-      }, 0);
+    const entriesValue = filteredMovements.filter(m => m.type === 'entry').reduce((sum, m) => sum + (m.quantity * (m.price || 0)), 0);
+    const exitsQuantity = filteredMovements.filter(m => m.type === 'exit').reduce((sum, m) => sum + m.quantity, 0);
+    const estimatedProfit = filteredData.reduce((sum, p) => {
+      if (p.cost && p.price && p.cost > 0 && p.price > 0) {
+        return sum + ((p.price - p.cost) * p.quantity);
+      }
+      return sum;
+    }, 0);
 
-    return { totalValue, purchasesValue, salesQuantity, monthlyProfit };
+    return { totalValue, entriesValue, exitsQuantity, estimatedProfit };
   }, [filteredData, filteredMovements]);
 
   const categoryData = useMemo(() => {
@@ -137,11 +132,11 @@ const Reports = () => {
       pdf.setTextColor(60, 60, 60);
       pdf.text(`Valor Total em Estoque: ${stats.totalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, 14, yPosition);
       yPosition += 7;
-      pdf.text(`Valor de Compras: ${stats.purchasesValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, 14, yPosition);
+      pdf.text(`Valor de Entradas: ${stats.entriesValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, 14, yPosition);
       yPosition += 7;
-      pdf.text(`Quantidade de Vendas: ${stats.salesQuantity} unidades`, 14, yPosition);
+      pdf.text(`Quantidade de Saídas: ${stats.exitsQuantity} unidades`, 14, yPosition);
       yPosition += 7;
-      pdf.text(`Lucro Mensal: ${stats.monthlyProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, 14, yPosition);
+      pdf.text(`Lucro Estimado: ${stats.estimatedProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`, 14, yPosition);
       yPosition += 15;
 
       // Capturar gráfico de barras
@@ -368,14 +363,14 @@ const Reports = () => {
 
           <Card className="bg-gradient-to-br from-yellow-500/10 via-yellow-500/5 to-transparent border-yellow-500/20">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Quantidade de Vendas</CardTitle>
+              <CardTitle className="text-sm font-medium">Quantidade de Saídas</CardTitle>
               <div className="p-2 bg-yellow-500/10 rounded-lg">
                 <ShoppingCart className="h-5 w-5 text-yellow-500" />
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-2xl sm:text-3xl font-bold text-yellow-500 break-words">
-                {stats.salesQuantity} un.
+                {stats.exitsQuantity} un.
               </p>
             </CardContent>
           </Card>
@@ -398,28 +393,28 @@ const Reports = () => {
 
           <Card className="bg-gradient-to-br from-pink-500/10 via-pink-500/5 to-transparent border-pink-500/20">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Valor de Compras</CardTitle>
+              <CardTitle className="text-sm font-medium">Valor de Entradas</CardTitle>
               <div className="p-2 bg-pink-500/10 rounded-lg">
                 <TrendingUp className="h-5 w-5 text-pink-500" />
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-xl sm:text-2xl md:text-3xl font-bold text-pink-500 break-words">
-                {stats.purchasesValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                {stats.entriesValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </p>
             </CardContent>
           </Card>
 
           <Card className="bg-gradient-to-br from-green-500/10 via-green-500/5 to-transparent border-green-500/20">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Lucro Mensal</CardTitle>
+              <CardTitle className="text-sm font-medium">Lucro Estimado</CardTitle>
               <div className="p-2 bg-green-500/10 rounded-lg">
                 <TrendingUp className="h-5 w-5 text-green-500" />
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-xl sm:text-2xl md:text-3xl font-bold text-green-500 break-words">
-                {stats.monthlyProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                {stats.estimatedProfit.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
               </p>
             </CardContent>
           </Card>
@@ -437,56 +432,28 @@ const Reports = () => {
             <CardContent>
               <div ref={barChartRef}>
               {stockLevelData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={stockLevelData} layout="vertical" margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
-                    <defs>
-                      <linearGradient id="barGradient" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.9}/>
-                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.5}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} horizontal={false} />
-                    <XAxis 
-                      type="number" 
-                      stroke="hsl(var(--muted-foreground))" 
-                      tick={{ fontSize: 10 }}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis 
-                      dataKey="name" 
-                      type="category" 
-                      width={120} 
-                      stroke="hsl(var(--muted-foreground))" 
-                      tick={{ fontSize: 11 }}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                        fontSize: '13px'
-                      }}
-                      formatter={(value: number, name: string) => {
-                        if (name === 'quantidade') {
-                          return [`${value} unidades`, 'Quantidade'];
-                        }
-                        return [value, name];
-                      }}
-                    />
-                    <Bar 
-                      dataKey="quantidade" 
-                      fill="url(#barGradient)" 
-                      radius={[0, 6, 6, 0]}
-                      maxBarSize={30}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
+                <div className="space-y-3">
+                  {stockLevelData.map((product, index) => {
+                    const maxValue = Math.max(...stockLevelData.map(p => p.quantidade));
+                    const percentage = (product.quantidade / maxValue) * 100;
+                    return (
+                      <div key={index} className="flex items-center gap-3">
+                        <span className="text-sm text-muted-foreground w-32 truncate">{product.name}</span>
+                        <div className="flex-1 h-6 bg-muted/30 rounded overflow-hidden relative">
+                          <div 
+                            className="h-full bg-primary rounded transition-all duration-500"
+                            style={{ width: `${percentage}%` }}
+                          />
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-medium text-foreground">
+                            {product.quantidade.toLocaleString('pt-BR')}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               ) : (
-                <div className="h-[350px] flex items-center justify-center text-muted-foreground">
+                <div className="h-[200px] flex items-center justify-center text-muted-foreground">
                   Nenhum dado disponível
                 </div>
               )}
@@ -504,54 +471,71 @@ const Reports = () => {
             <CardContent>
               <div ref={pieChartRef}>
               {categoryData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={350}>
-                  <PieChart margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
-                    <Pie
-                      data={categoryData}
-                      cx="50%"
-                      cy="45%"
-                      labelLine={false}
-                      label={false}
-                      outerRadius={85}
-                      innerRadius={45}
-                      fill="#8884d8"
-                      dataKey="value"
-                      paddingAngle={3}
-                    >
-                      {categoryData.map((_, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                        fontSize: '13px'
-                      }}
-                      formatter={(value: number, name: string) => [
-                        value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 
-                        name
-                      ]}
-                    />
-                    <Legend 
-                      layout="horizontal"
-                      verticalAlign="bottom"
-                      align="center"
-                      wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }}
-                      formatter={(value) => {
-                        const item = categoryData.find(c => c.name === value);
-                        if (item) {
-                          return `${value}: ${item.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`;
-                        }
-                        return value;
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                <div className="space-y-4">
+                  {/* Legend at top */}
+                  <div className="flex flex-wrap justify-center gap-3">
+                    {categoryData.map((item, index) => (
+                      <div key={item.name} className="flex items-center gap-1.5">
+                        <div 
+                          className="w-2.5 h-2.5 rounded-full" 
+                          style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                        />
+                        <span className="text-xs text-muted-foreground">{item.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Donut chart with percentages */}
+                  <div className="relative">
+                    <ResponsiveContainer width="100%" height={280}>
+                      <PieChart>
+                        <Pie
+                          data={categoryData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+                            const RADIAN = Math.PI / 180;
+                            const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                            const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                            const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                            return percent > 0.05 ? (
+                              <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight={500}>
+                                {`${(percent * 100).toFixed(1)}%`}
+                              </text>
+                            ) : null;
+                          }}
+                          outerRadius={110}
+                          innerRadius={60}
+                          dataKey="value"
+                          paddingAngle={2}
+                        >
+                          {categoryData.map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'hsl(var(--card))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px',
+                            fontSize: '12px'
+                          }}
+                          formatter={(value: number, name: string) => [
+                            value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), 
+                            name
+                          ]}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    {/* Center icon */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                      <Package className="h-10 w-10 text-muted-foreground/40" />
+                    </div>
+                  </div>
+                </div>
               ) : (
-                <div className="h-[350px] flex items-center justify-center text-muted-foreground">
+                <div className="h-[320px] flex items-center justify-center text-muted-foreground">
                   Nenhuma categoria disponível
                 </div>
               )}

@@ -32,7 +32,7 @@ export interface Movement {
   id: string;
   productId: string;
   productName: string;
-  type: 'purchase' | 'sale';
+  type: 'entry' | 'exit';
   quantity: number;
   price: number;
   date: string;
