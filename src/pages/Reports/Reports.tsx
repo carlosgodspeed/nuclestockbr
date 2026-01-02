@@ -208,7 +208,7 @@ const Reports = () => {
       pdf.text('Qtd', 100, yPosition + 5);
       pdf.text('Preço', 120, yPosition + 5);
       pdf.text('Total', 150, yPosition + 5);
-      pdf.text('Lucro Est.', 180, yPosition + 5);
+      pdf.text('Lucro Prod.', 180, yPosition + 5);
       yPosition += 10;
 
       // Linhas da tabela
@@ -576,7 +576,7 @@ const Reports = () => {
                     <th className="text-right p-2">Custo</th>
                     <th className="text-right p-2">Preço</th>
                     <th className="text-right p-2">Valor Total</th>
-                    <th className="text-right p-2">Lucro Estimado</th>
+                    <th className="text-right p-2">Lucro por Produto</th>
                     <th className="text-left p-2">Fornecedor</th>
                   </tr>
                 </thead>
