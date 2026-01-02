@@ -28,7 +28,7 @@ const Index = () => {
     {
       icon: TrendingUp,
       title: 'Movimentações',
-      description: 'Registre entradas e saídas de produtos com histórico detalhado.',
+      description: 'Registre compras e vendas de produtos com histórico detalhado.',
       color: 'feature-pink'
     },
     {
