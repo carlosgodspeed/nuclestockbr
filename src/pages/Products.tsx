@@ -418,7 +418,7 @@ const ProductCard = ({ product, onEdit, onDelete }: {
           </span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Lucro Est.:</span>
+          <span className="text-muted-foreground">Margem no Estoque:</span>
           <span className="font-medium text-green-600">
             {product.cost && product.price && product.cost > 0 && product.price > 0
               ? ((product.price - product.cost) * product.quantity).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
